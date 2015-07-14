@@ -1,4 +1,5 @@
 config SNAPPY_COMPRESS
+	select SNAPPY_DECOMPRESS
 	tristate "Google Snappy Compression"
 
 config SNAPPY_DECOMPRESS

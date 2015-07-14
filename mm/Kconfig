@@ -523,6 +523,10 @@ config ZSWAP_LZ4
 	depends on CRYPTO_LZ4
 	bool "lz4"
 
+config ZSWAP_SNAPPY
+	depends on SNAPPY_COMPRESS
+	bool "snappy"
+
 endchoice
 
 config ZPOOL
