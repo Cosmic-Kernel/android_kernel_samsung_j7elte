@@ -2472,6 +2472,10 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
         if (sdkp->WCE && sdkp->write_prot)
 			sdkp->WCE = 0;
 
+		/* No cache flush allowed for write protected devices */
+		if (sdkp->WCE && sdkp->write_prot)
+			sdkp->WCE = 0;
+
 		if (sdkp->first_scan || old_wce != sdkp->WCE ||
 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
 			sd_printk(KERN_NOTICE, sdkp,
