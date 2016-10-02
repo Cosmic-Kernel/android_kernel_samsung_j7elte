@@ -431,9 +431,7 @@ static ssize_t store_##file_name					\
 	unsigned int ret;						\
 	struct cpufreq_policy new_policy;				\
 									\
-	ret = cpufreq_get_policy(&new_policy, policy->cpu);		\
-	if (ret)							\
-		return -EINVAL;						\
+	memcpy(&new_policy, policy, sizeof(*policy));			\
 									\
 	ret = sscanf(buf, "%u", &new_policy.object);			\
 	if (ret != 1)							\
@@ -454,9 +452,7 @@ static ssize_t store_scaling_min_freq(struct cpufreq_policy *policy,
 	unsigned int ret;
 	struct cpufreq_policy new_policy;
 
-	ret = cpufreq_get_policy(&new_policy, policy->cpu);
-	if (ret)
-		return -EINVAL;
+	memcpy(&new_policy, policy, sizeof(*policy));
 
 	ret = sscanf(buf, "%u", &new_policy.user_min);
 	if (ret != 1)
