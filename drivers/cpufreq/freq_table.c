@@ -1,3 +1,4 @@
+
 /*
  * linux/drivers/cpufreq/freq_table.c
  *
@@ -79,9 +80,8 @@ int cpufreq_frequency_table_verify(struct cpufreq_policy *policy,
 
 	if (!found) {
 		policy->max = next_larger;
-
 		cpufreq_verify_within_limits(policy, policy->cpuinfo.min_freq,
-						policy->cpuinfo.max_freq);
+				policy->cpuinfo.max_freq);
 	}
 
 	pr_debug("verification lead to (%u - %u kHz) for cpu %u\n",
