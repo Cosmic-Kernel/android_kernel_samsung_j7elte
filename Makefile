@@ -375,12 +375,16 @@ LINUXINCLUDE    := \
 
 KBUILD_CPPFLAGS := -D__KERNEL__
 
-KBUILD_CFLAGS   := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
-		   -fno-strict-aliasing -fno-common \
-		   -Werror-implicit-function-declaration \
-		   -Wno-format-security \
-		   -fno-delete-null-pointer-checks \
-		   -fdiagnostics-show-option -Werror
+KBUILD_CFLAGS := -Wall -Wundef -Wstrict-prototypes -Wno-trigraphs \
+ 				-fno-strict-aliasing -fno-common \
+ 				-Wno-format-security -Wno-unused \
+ 				-fno-delete-null-pointer-checks \
+ 				-Wno-maybe-uninitialized \
+ 				-Wno-sizeof-pointer-memaccess \
+ 				-Wno-error=unused-parameter -Wno-error=unused-but-set-variable \
+ 				-fno-exceptions -Wno-multichar -Wno-sequence-point \
+				-fno-delete-null-pointer-checks \
+				-std=gnu89
 KBUILD_AFLAGS_KERNEL :=
 KBUILD_CFLAGS_KERNEL :=
 KBUILD_AFLAGS   := -D__ASSEMBLY__
