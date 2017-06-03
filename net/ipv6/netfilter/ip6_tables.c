@@ -755,11 +755,6 @@ check_entry_size_and_hooks(struct ip6t_entry *e,
 	if (!ip6_checkentry(&e->ipv6))
 		return -EINVAL;
 
-	err = xt_check_entry_offsets(e, e->elems, e->target_offset,
-				     e->next_offset);
-	if (err)
-		return err;
-
 	/* Check hooks & underflows */
 	for (h = 0; h < NF_INET_NUMHOOKS; h++) {
 		if (!(valid_hooks & (1 << h)))

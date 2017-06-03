@@ -467,7 +467,7 @@ static int mark_source_chains(const struct xt_table_info *newinfo,
 		duprintf("Finished chain %u\n", hook);
 	}
 	return 1;
-
+}
 
 static inline int check_entry(const struct arpt_entry *e, const char *name)
 {
@@ -581,11 +581,6 @@ static inline int check_entry_size_and_hooks(struct arpt_entry *e,
 
 	if (!arp_checkentry(&e->arp))
 		return -EINVAL;
-
-	err = xt_check_entry_offsets(e, e->elems, e->target_offset,
-				     e->next_offset);
-	if (err)
-		return err;
 
 	/* Check hooks & underflows */
 	for (h = 0; h < NF_ARP_NUMHOOKS; h++) {
