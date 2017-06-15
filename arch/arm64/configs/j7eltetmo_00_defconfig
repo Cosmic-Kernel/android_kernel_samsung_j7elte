@@ -3851,9 +3851,6 @@ CONFIG_EARLY_PRINTK=y
 # Samsung Rooting Restriction Feature
 #
 # CONFIG_SEC_RESTRICT_ROOTING is not set
-# CONFIG_SEC_RESTRICT_SETUID is not set
-# CONFIG_SEC_RESTRICT_FORK is not set
-# CONFIG_SEC_RESTRICT_ROOTING_LOG is not set
 
 #
 # Security options
