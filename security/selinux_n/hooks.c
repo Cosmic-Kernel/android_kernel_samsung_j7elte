@@ -493,17 +493,7 @@ static int sb_finish_set_opts(struct super_block *sb)
 		       sb->s_id, sb->s_type->name,
 		       labeling_behaviors[sbsec->behavior-1]);
 
-	if (sbsec->behavior == SECURITY_FS_USE_GENFS ||
-	    sbsec->behavior == SECURITY_FS_USE_MNTPOINT ||
-	    sbsec->behavior == SECURITY_FS_USE_NONE ||
-	    sbsec->behavior > ARRAY_SIZE(labeling_behaviors))
-		sbsec->flags &= ~SE_SBLABELSUPP;
-
-	/* Special handling. Is genfs but also has in-core setxattr handler*/
-	if (!strcmp(sb->s_type->name, "sysfs") ||
-	    !strcmp(sb->s_type->name, "pstore") ||
-	    !strcmp(sb->s_type->name, "debugfs") ||
-	    !strcmp(sb->s_type->name, "rootfs"))
+	if (selinux_is_sblabel_mnt(sb))
 		sbsec->flags |= SE_SBLABELSUPP;
 
 	/* Initialize the root inode. */
