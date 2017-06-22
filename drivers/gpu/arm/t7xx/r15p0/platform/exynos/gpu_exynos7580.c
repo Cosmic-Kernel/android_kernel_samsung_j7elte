@@ -63,7 +63,7 @@ static int mif_min_table[] = {
 static gpu_attribute gpu_config_attributes[] = {
 	{GPU_MAX_CLOCK, 800},
 	{GPU_MAX_CLOCK_LIMIT, 800},
-	{GPU_MIN_CLOCK, 266},
+	{GPU_MIN_CLOCK, 160},
 	{GPU_DVFS_START_CLOCK, 266},
 	{GPU_DVFS_BL_CONFIG_CLOCK, 266},
 	{GPU_GOVERNOR_TYPE, G3D_DVFS_GOVERNOR_INTERACTIVE},
@@ -97,7 +97,7 @@ static gpu_attribute gpu_config_attributes[] = {
 	{GPU_TEMP_THROTTLING5, 440},
 	{GPU_TEMP_THROTTLING6, 350},
 	{GPU_TEMP_THROTTLING7, 266},
-	{GPU_TEMP_THROTTLING8, 266},
+	{GPU_TEMP_THROTTLING8, 160},
 	{GPU_TEMP_TRIPPING, 266},
 	{GPU_POWER_COEFF, 46}, /* all core on param */
 	{GPU_DVFS_TIME_INTERVAL, 5},
