@@ -1662,10 +1662,12 @@ retry:
 out:
 	put_task_struct(next_task);
 
-	if (moved && task_notify_on_migrate(next_task))
+	if (moved && task_notify_on_migrate(next_task)) {
+		int cpu_of_rt = cpu_of(rq);
 		atomic_notifier_call_chain(&migration_notifier_head,
 					   cpu_of(lowest_rq),
-					   (void *)cpu_of(rq));
+					   (void *)&cpu_of_rt);
+	}
 
 	return ret;
 }
@@ -1762,7 +1764,7 @@ skip:
 	if (moved && task_notify_on_migrate(p))
 		atomic_notifier_call_chain(&migration_notifier_head,
 					   this_cpu,
-					   (void *)src_cpu);
+					   (void *)&src_cpu);
 
 	return ret;
 }
