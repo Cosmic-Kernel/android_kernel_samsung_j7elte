@@ -922,8 +922,8 @@ static int exynos_cpufreq_init(struct cpufreq_policy *policy)
 			policy->cpuinfo.max_freq = 800000;
 
 	/* CPU min and max freq policies upon boot */
-	policy->max = 1500000;
-	policy->min = 400000;
+	policy->max = 1600000;
+	policy->min = 300000;
 
 	cpumask_copy(policy->cpus, topology_core_cpumask(policy->cpu));
 
