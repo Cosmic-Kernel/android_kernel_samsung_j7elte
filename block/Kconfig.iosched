@@ -129,6 +129,17 @@ config BFQ_GROUP_IOSCHED
 	Enable hierarchical scheduling in BFQ, using the blkio
 	(cgroups-v1) or io (cgroups-v2) controller.
 
+config IOSCHED_SWITCHER
+	bool "Use Noop while the screen is off"
+	depends on IOSCHED_NOOP
+	---help---
+	  This enables a driver that switches the I/O scheduler for a single
+	  block device to Noop when the screen turns off, and back to its
+	  original I/O scheduler after a delay when the screen is turned back
+	  on. It requires being manually initialized from a different driver
+	  in order to grab the request_queue pointer that should have its I/O
+	  scheduler switched to Noop when the screen turns off.
+
 choice
 	prompt "Default I/O scheduler"
 	default DEFAULT_CFQ
@@ -164,7 +175,7 @@ choice
 		bool "ZEN" if IOSCHED_ZEN=y
 
 	config DEFAULT_VR
-		bool "VR" if IOSCHED_VR=y			  
+		bool "VR" if IOSCHED_VR=y
 
 	config DEFAULT_ROW
 		bool "ROW" if IOSCHED_ROW=y
@@ -175,7 +186,7 @@ choice
 		  Dispatching is done in a RR manner when the dispatch quantum
 		  for each queue is defined according to queue priority.
 		  Most suitable for mobile devices.
-		
+
 	config DEFAULT_CFQ
 		bool "CFQ" if IOSCHED_CFQ=y
 
