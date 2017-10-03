@@ -95,6 +95,7 @@ static int efi_pstore_read_func(struct efivar_entry *entry, void *data)
 static ssize_t efi_pstore_read(u64 *id, enum pstore_type_id *type,
 			       int *count, struct timespec *timespec,
 			       char **buf, bool *compressed,
+			       ssize_t *ecc_notice_size,
 			       struct pstore_info *psi)
 {
 	struct pstore_read_data data;
