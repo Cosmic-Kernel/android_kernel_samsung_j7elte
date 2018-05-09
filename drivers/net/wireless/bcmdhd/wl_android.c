@@ -1565,10 +1565,10 @@ wls_parse_batching_cmd(struct net_device *dev, char *command, int total_len)
 							goto exit;
 						}
 						batch_params.chan_list[i++] =
-							simple_strtol(token2, NULL, 0);
+						simple_strtol(token2, NULL, 0);
 						batch_params.nchan++;
 						DHD_PNO(("channel :%d\n",
-							batch_params.chan_list[i-1]));
+						batch_params.chan_list[i-1]));
 					}
 				 }
 			} else if (!strncmp(param, PNO_PARAM_RTT, strlen(PNO_PARAM_RTT))) {
