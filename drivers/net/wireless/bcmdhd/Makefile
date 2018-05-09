@@ -138,7 +138,19 @@ DHDCFLAGS += -DUSE_WFA_CERT_CONF
 # Does not forword internal packet
 DHDCFLAGS += -DDHD_DONOT_FORWARD_BCMEVENT_AS_NETWORK_PKT
 
+# Enable HANG event test private command
+DHDCFLAGS += -DSUPPORT_TRIGGER_HANG_EVENT
 
+# Random mac scan
+DHDCFLAGS += -DSUPPORT_RANDOM_MAC_SCAN
+
+ANDROID_PLATFORM_VERSION = 7
+# If Android version lower than 7(Nougat) => Use Legacy File path
+ifeq ($(shell expr $(ANDROID_PLATFORM_VERSION) \< 7),1)
+DHDCFLAGS += -DDHD_LEGACY_FILE_PATH
+$(warning WiFi will be using Legacy file path)
+endif
+endif
 
 ##############################
 # Android Platform Definition
