@@ -1484,8 +1484,6 @@ static struct page *__alloc_nonmovable_userpage(struct page *page,
 	return alloc_page(GFP_HIGHUSER);
 }
 
-static inline int stack_guard_page(struct vm_area_struct *vma, unsigned long addr);
-
 static bool __need_migrate_cma_page(struct page *page,
 				struct vm_area_struct *vma,
 				unsigned long start, unsigned int flags)
@@ -1756,12 +1754,6 @@ no_page_table:
 	return page;
 }
 
-static inline int stack_guard_page(struct vm_area_struct *vma, unsigned long addr)
-{
-	return stack_guard_page_start(vma, addr) ||
-	       stack_guard_page_end(vma, addr+PAGE_SIZE);
-}
-
 /**
  * __get_user_pages() - pin user pages in memory
  * @tsk:	task_struct of target task
@@ -1929,11 +1921,6 @@ long __get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 				int ret;
 				unsigned int fault_flags = 0;
 
-				/* For mlock, just skip the stack guard page. */
-				if (foll_flags & FOLL_MLOCK) {
-					if (stack_guard_page(vma, start))
-						goto next_page;
-				}
 				if (foll_flags & FOLL_WRITE)
 					fault_flags |= FAULT_FLAG_WRITE;
 				if (nonblocking)
@@ -3302,7 +3289,6 @@ out_release:
 	}
 	return ret;
 }
-
 /*
  * This is like a special single-page "expand_{down|up}wards()",
  * except we must first make sure that 'address{-|+}PAGE_SIZE'
@@ -3957,7 +3943,7 @@ retry:
 	    unlikely(__pte_alloc(mm, vma, pmd, address)))
 		return VM_FAULT_OOM;
 	/*
-	 * If a huge pmd materialized under us just retry later.  Use
+	if (unlikely(pmd_trans_huge(*pmd)))		 * If a huge pmd materialized under us just retry later.  Use
 	 * pmd_trans_unstable() instead of pmd_trans_huge() to ensure the pmd
 	 * didn't become pmd_trans_huge under us and then back to pmd_none, as
 	 * a result of MADV_DONTNEED running immediately after a huge pmd fault
