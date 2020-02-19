@@ -151,6 +151,13 @@ struct mdnie_info {
 
 	struct rgb_info		wrgb_current;
 
+	int white_default_r;
+	int white_default_g;
+	int white_default_b;
+	int white_balance_r;
+	int white_balance_g;
+	int white_balance_b;
+	unsigned int white_rgb_enabled;
 	struct mdnie_table table_buffer;
 	mdnie_t sequence_buffer[256];
 };
