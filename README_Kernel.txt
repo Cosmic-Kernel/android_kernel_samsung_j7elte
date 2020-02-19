@@ -1,4 +1,5 @@
 ################################################################################
+# Tauro Kenrel for Nougat & Oreo
 
 1. How to Build
 	- get Toolchain
