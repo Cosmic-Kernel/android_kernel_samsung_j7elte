@@ -47,6 +47,7 @@ static void remove_safetynet_flags(char *cmd)
 	remove_flag(cmd, "androidboot.boot.warranty_bit=");
 	remove_flag(cmd, "androidboot.warranty_bit=");
 	remove_flag(cmd, "androidboot.flash.locked=");
+	remove_flag(cmd, "androidboot.fmp_config=");
 	remove_flag(cmd, "androidboot.boot.ddrinfo=");
 }
 
