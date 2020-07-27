@@ -18,7 +18,7 @@
 #include <linux/backing-dev.h>
 #include "internal.h"
 
-bool fsync_enabled = true;
+bool fsync_enabled = false;
 module_param(fsync_enabled, bool, 0755);
 
 #ifdef CONFIG_ASYNC_FSYNC
@@ -78,7 +78,7 @@ static struct workqueue_struct *intr_sync_wq;
 /* It prevents double allocation of intr_sync_wq */
 static DEFINE_MUTEX(intr_sync_wq_lock);
 
-static inline struct interruptible_sync_work *INTR_SYNC_WORK(struct work_struct *work) 
+static inline struct interruptible_sync_work *INTR_SYNC_WORK(struct work_struct *work)
 {
 	return container_of(work, struct interruptible_sync_work, work);
 }
@@ -211,7 +211,7 @@ find_idle:
 			queue_work(intr_sync_wq, &sync_work->work);
 		}
 		spin_unlock(&sync_work->lock);
-		
+
 		do {
 			/* Check wakeup event first before waiting:
 			 * If a wakeup-event is detected, wake up right now
