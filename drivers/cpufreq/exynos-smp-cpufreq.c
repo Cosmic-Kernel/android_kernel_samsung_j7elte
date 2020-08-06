@@ -52,7 +52,7 @@
 #define LIMIT_COLD_VOLTAGE	1350000
 #define MIN_COLD_VOLTAGE	950000
 #define COLD_VOLT_OFFSET	37500
-#define MY_MAX_FREQ         1600000
+#define MY_MAX_FREQ         1500000
 #define MY_MIN_FREQ         300000
 
 #define APLL_FREQ(f, a0, a1, a2, a3, a4, a5, a6, b0, b1, m, p, s) \
@@ -97,7 +97,6 @@ static struct {
 	 * clock divider for SCLK_CPU_PLL, SCLK_HPM_CPU
 	 * PLL M, P, S
 	 */
-	APLL_FREQ(1600000, 0, 0, 7, 7, 2, 7, 3, 7, 7, 246, 4, 0),
 	APLL_FREQ(1500000, 0, 0, 7, 7, 2, 7, 3, 7, 7, 230, 4, 0),
 	APLL_FREQ(1400000, 0, 0, 7, 7, 2, 7, 3, 7, 7, 216, 4, 0),
 	APLL_FREQ(1300000, 0, 0, 7, 7, 2, 7, 3, 6, 7, 200, 4, 0),
@@ -916,7 +915,7 @@ static int exynos_cpufreq_init(struct cpufreq_policy *policy)
 	voltage_tolerance = exynos_get_voltage_tolerance(cpu_dev);
 	policy->cur = exynos_cpufreq_get(policy->cpu);
 	/* Later this code will be removed. This is for first lot */
-	policy->cpuinfo.max_freq = 1600000;
+	policy->cpuinfo.max_freq = 1500000;
 	policy->cpuinfo.min_freq = 300000;
 
 	if (samsung_rev() == EXYNOS7580_REV_0)
@@ -924,7 +923,7 @@ static int exynos_cpufreq_init(struct cpufreq_policy *policy)
 			policy->cpuinfo.max_freq = 800000;
 
 	/* CPU min and max freq policies upon boot */
-	policy->max = 1600000;
+	policy->max = 1500000;
 	policy->min = 300000;
 
 	cpumask_copy(policy->cpus, topology_core_cpumask(policy->cpu));
