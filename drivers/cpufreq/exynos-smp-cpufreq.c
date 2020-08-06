@@ -97,6 +97,7 @@ static struct {
 	 * clock divider for SCLK_CPU_PLL, SCLK_HPM_CPU
 	 * PLL M, P, S
 	 */
+ 	APLL_FREQ(1600000, 0, 0, 7, 7, 2, 7, 3, 7, 7, 246, 4, 0),
 	APLL_FREQ(1500000, 0, 0, 7, 7, 2, 7, 3, 7, 7, 230, 4, 0),
 	APLL_FREQ(1400000, 0, 0, 7, 7, 2, 7, 3, 7, 7, 216, 4, 0),
 	APLL_FREQ(1300000, 0, 0, 7, 7, 2, 7, 3, 6, 7, 200, 4, 0),
