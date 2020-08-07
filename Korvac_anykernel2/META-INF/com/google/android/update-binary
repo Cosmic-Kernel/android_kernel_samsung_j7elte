@@ -52,9 +52,7 @@ ui_print " ";
 ui_print "$(file_getprop /tmp/anykernel/essential.prop project.name)";
 ui_print "$(file_getprop /tmp/anykernel/essential.prop contributor.name)";
 ui_print " ";
-ui_print "       Image Recovery Editor V15.0      ";
-ui_print " ";
-ui_print "  Thanks for the lovely work by mdmaher ";
+ui_print "  Thanks to mdmaher for his amazing work ";
 ui_print " ";
 ui_print "****************************************";
 ui_print " ";
@@ -75,7 +73,7 @@ if [ "$(file_getprop /tmp/anykernel/essential.prop do.devicecheck)" == 1 ]; then
   if [ "$match" != 1 ]; then
     abort "--- Unsupported device. Aborting...";
   fi;
-  ui_print "> Successful"
+  ui_print "> Supports!!!)"
 fi;
 
 if [ "$(file_getprop /tmp/anykernel/essential.prop do.initd)" == 1 ]; then

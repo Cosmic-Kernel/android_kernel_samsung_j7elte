@@ -1,9 +1,10 @@
  # Korvac Kernel ![Test Status](https://github.com/gobuffalo/tags/workflows/Tests/badge.svg)
- #### Korvac Kernel for Samsung Galaxy J7 F/H/M, Exynos 7580.<br>  <br> 
+ #### Korvac Kernel for Samsung Galaxy J7 F/H/M, Exynos 7580 <br>  <br> 
+ #### Stay tuned for Monthly Updates & Fixes <br>  <br> 
  <img src="https://github.com/themagicalmammal/android_kernel_samsung_j7elte/blob/master/Korvaclogo.jpg" width="500" />  <br> <br> 
 
  # Changelog
- ##### 1. Made with latest aarch64 source before GCC depreciated
+ ##### 1. Made with latest aarch64 source before GCC depreciated*
  ##### 2. Added Stock Marshmallow Battery Drivers
  ##### 3. Stock Marshmallow regulator drivers added
  ##### 4. Added Stock Marshmallow Sensor Drivers
@@ -26,7 +27,7 @@
  ##### 21. Added New I/O schedulers
  ##### 22. Added New Governers
  ##### 23. ADB insecure
- ##### 24. Boeffla wakelock blocker v1.1.0
+ ##### 24. Boeffla Wakelock Blocker v1.1.0
  ##### 25. CRC check Disabled
  ##### 26. StateNotifier & SysfsHelper
  ##### 27. FSync Toggle
@@ -36,7 +37,7 @@
  ##### 31. Added CodeAurora Stuff (CafActive...)
  ##### 32. Lz4 compression with optimised algorithm
  ##### 33. Disabled RKP
- ##### 34. CPU - boost
+ ##### 34. CPU_boost
  ##### 35. New Random Algos
  ##### 36. WireGuard 0.3 (2020)
  ##### 37. Optimised ZSwap
@@ -45,6 +46,9 @@
  ##### 40. Lazyplug  <br>
  **And Many More Optimisations!**
  
+ # Version Info
+ <img src="https://github.com/themagicalmammal/android_kernel_samsung_j7elte/blob/master/ss.jpg" width="400" />  <br> <br> 
+
  # To-do
  Nothing left to do from my end.
  
@@ -55,5 +59,6 @@
  **Stupid Example:** *Can you make the gaming faster?*
  
  # Documentation
+ * [XDA Thread](https://forum.xda-developers.com/galaxy-j7/development/kernel-korvac-kernel-j700f-h-m-t4143785)
  * [Exynos 7580](https://github.com/themagicalmammal/android_kernel_samsung_j7elte/blob/master/Exynos7580.md)
  * [Samsung Galaxy J7](https://github.com/themagicalmammal/android_kernel_samsung_j7elte/blob/master/J7.md)
