@@ -179,6 +179,3 @@ obj-$(CONFIG_IRLED)		+= irled/
 #Sensorhub
 obj-$(CONFIG_SENSORS)		+= sensors/
 obj-$(CONFIG_SENSORS_SSP)       += sensorhub/
-
-#Fingerprint
-obj-$(CONFIG_SENSORS_FINGERPRINT)       += fingerprint/
