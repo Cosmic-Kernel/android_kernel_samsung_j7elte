@@ -21,7 +21,7 @@
  ##### 15. Disabled Tima
  ##### 16. Disabled Knox
  ##### 17. Disabled Dm-Verify
- ##### 18. Added Cronos Script
+ ##### 18. Lazyplug  
  ##### 19. Disabled CRC Check
  ##### 20. Private Mod Support
  ##### 21. Added New I/O schedulers
@@ -42,8 +42,7 @@
  ##### 36. WireGuard 0.3 (2020)
  ##### 37. Optimised ZSwap
  ##### 38. Doubletap2wake
- ##### 39. Reduced Throttling
- ##### 40. Lazyplug  <br>
+ ##### 39. Reduced Throttling <br>
  **And Many More Optimisations!**
  
  # Version Info
