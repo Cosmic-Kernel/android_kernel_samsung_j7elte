@@ -226,6 +226,9 @@ if [ "$(file_getprop /tmp/anykernel/essential.prop do.cleanup)" == 1 ]; then
   rm -rf /tmp/anykernel;
 fi;
 
+ifelse(is_mounted("/cache"), unmount("/cache"));
+run_program("/sbin/mount", "-t", "auto", "/cache");
+delete_recursive("/cache");
 umount /system;
 umount /data;
 ui_print " ";
