@@ -1056,8 +1056,8 @@ static ssize_t store_cpufreq_max_limit(struct kobject *kobj, struct attribute *a
 	if (sscanf(buf, "%d", &freq) != 1)
 		return -EINVAL;
 
-	if (soc_is_exynos7580_v1())
-		index = 1;
+	//if (soc_is_exynos7580_v1())
+		//index = 1;
 
 	if (freq < 0)
 		freq = apll_freq[0].freq / 1000;
