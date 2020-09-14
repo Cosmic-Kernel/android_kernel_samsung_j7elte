@@ -51,13 +51,6 @@ ui_print "****************************************";
 ui_print " ";
 ui_print "$(file_getprop /tmp/anykernel/essential.prop project.name)";
 ui_print "$(file_getprop /tmp/anykernel/essential.prop contributor.name)";
-ui_print " ";
-ui_print "       Image Recovery Editor V15.0      ";
-ui_print " ";
-ui_print "  Thanks for the lovely work by mdmaher ";
-ui_print " ";
-ui_print "****************************************";
-ui_print " ";
 mount -o ro /system;
 mount /data;
 
@@ -135,7 +128,7 @@ if [ "$(file_getprop /tmp/anykernel/essential.prop do.modules)" == 1 ]; then
     ui_print "--- Setting permissions"
     chmod 0644 $wlan
   fi
-  
+
   if [ ! -f $prontonew ] && [ -f $wlannew ]
   then
     ui_print "--- Using method 2"
@@ -165,7 +158,7 @@ if [ "$(file_getprop /tmp/anykernel/essential.prop do.modules)" == 1 ]; then
   fi
 
   if [ -f $prontonew ] && [ -f $wlannew ]
-  then 
+  then
     ui_print "--- Using Method 3"
     if [ -f $pronto ]; then
       ui_print "----- Pronto_wlan.ko exists"
@@ -237,9 +230,4 @@ ui_print " ";
 ui_print "                  Done!                 ";
 ui_print "****************************************";
 ui_print " ";
-ui_print "         INSTALLATION COMPLETE          ";
 ui_print " ";
-ui_print "****************************************";
-ui_print " ";
-ui_print " ";
-
