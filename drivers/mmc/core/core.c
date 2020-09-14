@@ -69,7 +69,7 @@ static const unsigned freqs[] = {400000, 300000};
  * So we allow it it to be disabled.
  */
 bool use_spi_crc = 0;
-module_param(use_spi_crc, bool, 0);
+module_param(use_spi_crc, bool, 0644);
 
 /*
  * We normally treat cards as removed during suspend if they are not
@@ -905,7 +905,7 @@ void mmc_wait_for_req(struct mmc_host *host, struct mmc_request *mrq)
 #ifdef CONFIG_MMC_BLOCK_DEFERRED_RESUME
 	if (mmc_bus_needs_resume(host))
 		mmc_resume_bus(host);
-#endif
+#endif	
 	__mmc_start_req(host, mrq);
 	mmc_wait_for_req_done(host, mrq);
 }
@@ -3387,7 +3387,7 @@ void mmc_ctrl_power(struct mmc_host *host, bool onoff)
 	 }
 }
 EXPORT_SYMBOL(mmc_ctrl_power);
-#endif
+#endif 
 
 static void __exit mmc_exit(void)
 {
