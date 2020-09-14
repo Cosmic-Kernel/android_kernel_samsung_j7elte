@@ -114,7 +114,7 @@ static struct {
 	APLL_FREQ(500000,  0, 0, 7, 7, 2, 7, 3, 2, 7, 312, 4, 2),
 	APLL_FREQ(400000,  0, 0, 7, 7, 2, 7, 3, 2, 7, 248, 4, 2),
 	APLL_FREQ(300000,  0, 0, 7, 7, 2, 7, 3, 1, 7, 368, 4, 3),
-	//APLL_FREQ(200000,  0, 0, 7, 7, 2, 7, 3, 1, 7, 240, 4, 3),		// random reboot 
+	//APLL_FREQ(200000,  0, 0, 7, 7, 2, 7, 3, 1, 7, 240, 4, 3),		// random reboot
 	//APLL_FREQ(100000,  0, 0, 7, 7, 2, 7, 3, 1, 7, 256, 4, 4),		// lags
 };
 
@@ -1358,7 +1358,7 @@ static int exynos_smp_probe(struct platform_device *pdev)
 		pm_qos_add_request(&cluster_qos_max[CL_ONE], PM_QOS_CLUSTER1_FREQ_MAX, apll_freq[0].freq / 1000);
 		maxlock_freq = apll_freq[0].freq / 1000;
 #endif
-	}
+//	}
 
 	pm_qos_add_request(&cluster_qos_min[CL_ZERO], PM_QOS_CLUSTER0_FREQ_MIN, 0);
 #ifndef CONFIG_EXYNOS7580_QUAD
