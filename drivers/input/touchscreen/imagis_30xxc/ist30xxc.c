@@ -26,6 +26,9 @@
 #include <linux/device.h>
 #include <linux/mutex.h>
 #include <linux/input/mt.h>
+#ifdef CONFIG_POWERSUSPEND
+#include <linux/powersuspend.h>
+#endif
 
 #include "ist30xxc.h"
 #include "ist30xxc_update.h"
@@ -210,7 +213,7 @@ void ist30xx_start(struct ist30xx_data *data)
 	}
 
 	ist30xx_cmd_start_scan(data);
-
+	
 	tsp_info("%s(), mode: 0x%X\n", __func__, data->noise_mode & 0xFFFF);
 }
 
@@ -420,7 +423,6 @@ void ist30xx_gesture_cmd(struct ist30xx_data *data, int cmd)
 /* dt2wake */
 DEFINE_MUTEX(dt2w_lock);
 u32 last_x,last_y;
-bool screen_is_off;
 u32 distance_between(u32 x1, u32 x2, u32 y1, u32 y2) {
        u32 distance = int_sqrt(((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1)));
        tsp_noti("distance between points (%u,%u) and (%u,%u) is %u\n", x1, x2, y1, y2, distance);
@@ -461,7 +463,9 @@ void print_tsp_event(struct ist30xx_data *data, finger_info *finger, u32 z_value
 #else
 			tsp_noti("%s%d fw:%x\n", TOUCH_DOWN_MESSAGE, finger->bit_field.id, data->fw.cur.fw_ver);
 #endif
-			if (data->dt2w_enable && screen_is_off && finger->bit_field.id == 1) {
+#ifdef CONFIG_POWERSUSPEND
+			if (data->dt2w_enable && power_suspend_active && finger->bit_field.id == 1) {
+#endif
 				if (current_time - last_input_time > 350000) {
 					data->dt2w_count = 0;
 				}
@@ -991,7 +995,6 @@ static int ist30xx_suspend(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct ist30xx_data *data = i2c_get_clientdata(client);
-	screen_is_off = true;
 
 	del_timer(&event_timer);
 	if (!data->dt2w_enable) {
@@ -1023,7 +1026,6 @@ static int ist30xx_resume(struct device *dev)
 {
 	struct i2c_client *client = to_i2c_client(dev);
 	struct ist30xx_data *data = i2c_get_clientdata(client);
-	screen_is_off = false;
 
 	data->noise_mode |= (1 << NOISE_MODE_POWER);
 
@@ -1509,7 +1511,7 @@ static int ist30xx_parse_dt(struct device *dev, struct ist30xx_data *data)
 				data->dt_data->project_name = "a3x_rev0";
 			}
 		}
-
+		
 		snprintf(data->dt_data->fw_path, FIRMWARE_PATH_LENGTH,
 				"%s%s_%s.fw", FIRMWARE_PATH,
 				data->dt_data->ic_version, data->dt_data->project_name);
