@@ -4,8 +4,6 @@
  *
  * Copyright 2012~2014 Paul Reioux
  * Copyright 2015 Park Ju Hyung
- * Copyright 2017 Stenkin Evgeniy
- * Copyright 2018 Alexander Alexeev
  *
  *
  ** Introduction
@@ -68,7 +66,6 @@
 #include <linux/workqueue.h>
 #include <linux/cpu.h>
 #include <linux/sched.h>
-#include <linux/fb.h>
 #include <linux/mutex.h>
 #include <linux/module.h>
 #include <linux/slab.h>
@@ -87,9 +84,9 @@
 #undef DEBUG_LAZYPLUG
 
 #define LAZYPLUG_MAJOR_VERSION	1
-#define LAZYPLUG_MINOR_VERSION	2
+#define LAZYPLUG_MINOR_VERSION	0
 
-#define DEF_SAMPLING_MS			(100)
+#define DEF_SAMPLING_MS			(268)
 #define DEF_IDLE_COUNT			(19) /* 268 * 19 = 5092, almost equals to 5 seconds */
 
 #define DUAL_PERSISTENCE		(2500 / DEF_SAMPLING_MS)
@@ -124,7 +121,6 @@ static int persist_count = 0;
 static bool __read_mostly suspended = false;
 static bool __read_mostly cac_bool = true;
 static bool __read_mostly lazymode = false;
-static bool lcd_on = true;
 
 struct ip_cpu_info {
 	unsigned int sys_max;
@@ -206,8 +202,8 @@ static unsigned int __read_mostly *nr_run_profiles[] = {
 
 #define CPU_NR_THRESHOLD	((THREAD_CAPACITY << 1) + (THREAD_CAPACITY / 2))
 
-static unsigned int __read_mostly nr_possible_cores = 8;
-module_param(nr_possible_cores, uint, 0660);
+static unsigned int __read_mostly nr_possible_cores;
+module_param(nr_possible_cores, uint, 0444);
 
 static unsigned int __read_mostly cpu_nr_run_threshold = CPU_NR_THRESHOLD;
 module_param(cpu_nr_run_threshold, uint, 0664);
@@ -239,7 +235,7 @@ static void __ref cpu_all_ctrl(bool online) {
 	if (online) {
 		/* start from the smaller ones */
 		if (lazymode) {
-			/* Mess around with the first cluster only */
+			/* Mess around with A53 only */
 			for(cpu = 1; cpu <= 3; cpu++) {
 				cpu_up(cpu);
 			}
@@ -338,25 +334,11 @@ static void unplug_cpu(int min_active_cpu)
 	}
 }
 
-static void set_cpus(void)
-{
-	unsigned int cpu;
-
-	for(cpu = nr_cpu_ids-1; cpu >= 1; cpu--) {
-		if (!cpu_online(cpu))
-			continue;
-
-		if (cpu >= nr_possible_cores)
-			cpu_down(cpu);
-	}
-}
-
 static void lazyplug_work_fn(struct work_struct *work)
 {
 	unsigned int nr_run_stat;
 	unsigned int cpu_count = 0;
 	unsigned int nr_cpus = 0;
-	unsigned int old_nr = 8;
 
 	if (lazyplug_active) {
 		nr_run_stat = calculate_thread_stats();
@@ -367,9 +349,6 @@ static void lazyplug_work_fn(struct work_struct *work)
 #endif
 		cpu_count = nr_run_stat;
 		nr_cpus = num_online_cpus();
-		if (old_nr > nr_possible_cores) {
-			set_cpus();
-		}
 
 		if (!suspended) {
 			if (persist_count > 0)
@@ -419,7 +398,6 @@ static void lazyplug_work_fn(struct work_struct *work)
 			pr_info("lazyplug is suspended!\n");
 #endif
 	}
-	old_nr = nr_possible_cores;
 	queue_delayed_work_on(0, lazyplug_wq, &lazyplug_work,
 		msecs_to_jiffies(sampling_time));
 }
@@ -594,37 +572,11 @@ static struct input_handler lazyplug_input_handler = {
 	.id_table       = lazyplug_ids,
 };
 
-
-static int fb_state_change(struct notifier_block *nb,
-		unsigned long event, void *data)
-{
-	struct fb_event *evdata = data;
-	int *blank = evdata->data;
-
-	if (event == FB_EVENT_BLANK) {
-		switch (*blank) {
-		case FB_BLANK_POWERDOWN:
-			lcd_on = false;
-			break;
-		case FB_BLANK_UNBLANK:
-			lcd_on = true;
-			idle_count = 0;
-			cac_bool = true;
-			queue_delayed_work_on(0, lazyplug_wq, &lazyplug_cac,msecs_to_jiffies(0));
-			break;
-		}
-	}
-
-	return NOTIFY_OK;
-}
-
-static struct notifier_block fb_block = {
-		.notifier_call = fb_state_change,
-};
-
 int __init lazyplug_init(void)
 {
-	int rc,ret;
+	int rc;
+
+	nr_possible_cores = 8;
 
 	pr_info("lazyplug: version %d.%d by arter97\n"
 		"          based on intelli_plug by faux123\n",
@@ -648,14 +600,8 @@ int __init lazyplug_init(void)
 	register_early_suspend(&lazyplug_early_suspend_driver);
 #endif
 
-	ret = fb_register_client(&fb_block);
-	if (ret) {
-		pr_err("Failed to register fb notifier\n");
-	}
-
-
-	lazyplug_wq = alloc_workqueue("lazyplug", WQ_FREEZABLE, 1);
-	lazyplug_cac_wq = alloc_workqueue("lplug_cac", WQ_FREEZABLE, 1);
+	lazyplug_wq = alloc_workqueue("lazyplug", WQ_HIGHPRI, 1);
+	lazyplug_cac_wq = alloc_workqueue("lplug_cac", WQ_HIGHPRI, 1);
 	INIT_DELAYED_WORK(&lazyplug_work, lazyplug_work_fn);
 	INIT_DELAYED_WORK(&lazyplug_cac, lazyplug_cac_fn);
 
