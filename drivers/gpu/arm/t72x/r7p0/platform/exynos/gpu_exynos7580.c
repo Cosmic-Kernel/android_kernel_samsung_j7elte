@@ -95,9 +95,9 @@ static gpu_attribute gpu_config_attributes[] = {
 	{GPU_TEMP_THROTTLING2, 734},
 	{GPU_TEMP_THROTTLING3, 668},
 	{GPU_TEMP_THROTTLING4, 534},
-	{GPU_TEMP_THROTTLING5, 440},
-	{GPU_TEMP_THROTTLING6, 350},
-	{GPU_TEMP_THROTTLING7, 266},
+	{GPU_TEMP_THROTTLING5, 160}, //underclock
+	{GPU_TEMP_THROTTLING6, 160}, //underclock
+	{GPU_TEMP_THROTTLING7, 160}, //underclock
   {GPU_TEMP_THROTTLING8, 160}, //underclock
 	{GPU_TEMP_TRIPPING, 266},
 	{GPU_POWER_COEFF, 46}, /* all core on param */
