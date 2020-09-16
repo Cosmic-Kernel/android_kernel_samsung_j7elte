@@ -229,13 +229,15 @@ static void __ref cpu_all_ctrl(bool online) {
 	unsigned int cpu;
 
 	if (online) {
-		/* start from the smaller ones */
-		for(cpu = 1; cpu <= nr_cpu_ids - 1; cpu++) {
+		for_each_cpu_not(cpu, cpu_online_mask) {
+			if (cpu == 0)
+				continue;
 			cpu_up(cpu);
 		}
 	} else {
-		/* kill from the bigger ones */
-		for(cpu = nr_cpu_ids - 1; cpu >= 1; cpu--) {
+		for_each_online_cpu(cpu) {
+			if (cpu == 0)
+				continue;
 			cpu_down(cpu);
 		}
 	}
@@ -312,13 +314,11 @@ static void unplug_cpu(int min_active_cpu)
 	struct ip_cpu_info *l_ip_info;
 	int l_nr_threshold;
 
-	for(cpu = nr_cpu_ids - 1; cpu >= 1; cpu--) {
-		if (!cpu_online(cpu))
-			continue;
-
+	for_each_online_cpu(cpu) {
 		l_nr_threshold =
 			cpu_nr_run_threshold << 1 / (num_online_cpus());
-
+		if (cpu == 0)
+			continue;
 		l_ip_info = &per_cpu(ip_info, cpu);
 		if (cpu > min_active_cpu)
 			if (l_ip_info->cpu_nr_running < l_nr_threshold)
@@ -335,9 +335,6 @@ static void lazyplug_work_fn(struct work_struct *work)
 	if (lazyplug_active) {
 		nr_run_stat = calculate_thread_stats();
 		update_per_cpu_stat();
-#ifdef CONFIG_EXYNOS5_DYNAMIC_CPU_HOTPLUG
-	exynos_dm_hotplug_disable();
-#endif
 #ifdef DEBUG_LAZYPLUG
 		pr_info("nr_run_stat: %u\n", nr_run_stat);
 #endif
