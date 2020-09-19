@@ -1,7 +1,6 @@
 <b><#selectbg_g>v179</#></b>
 <b>Supports J700FHM</b>
 
-<*> ADB Insecure
 <*> Acceleration module
 <*> Aligned Wakeup sources
 <*> Avoid multiple memory leaks
@@ -36,7 +35,7 @@
 <*> Improved throttling response
 <*> Increase CPU-idle
 <*> Increased CPU relaxing
-<*> Init Support
+<*> Init.d Support
 <*> Kernel Debugging Disabled
 <*> Knox 0x0
 <*> Made more optimisation on GPU
