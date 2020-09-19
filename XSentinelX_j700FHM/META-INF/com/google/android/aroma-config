@@ -1,0 +1,159 @@
+﻿# Coded by themagicalmammal
+##
+# Initializing Rom Information
+#
+ini_set("rom_name",             "XSentinelX Kernel");
+ini_set("rom_version",          "v197");
+ini_set("rom_author",           "themagicalmammal");
+ini_set("rom_device",           "J700F/H/M");
+ini_set("rom_date",             "18th Sep 2020");
+
+
+##
+# Show Simple Splash
+#
+splash(
+#  #-- Duration 2000ms / 2 seconds
+    2000,
+
+  #-- <AROMA Resource Dir>/sample.png
+    "xsentinel"
+);
+
+#
+# Set Small Font to Support all fonts
+#
+fontresload( "0", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "12" );
+fontresload( "1", "ttf/Roboto-Regular.ttf;ttf/DroidSansFallback.ttf;", "14" );
+#
+# INCLUDE EXAMPLE = Language Selection & Form Example
+#
+
+###################################################################################################################
+#
+# SELECT THEME
+#
+theme("xsentinel");
+
+###################################################################################################################
+#
+# SHOW ROM INFORMATION
+#
+viewbox(
+    "xsentinel Kernel",
+    "themagicalmammal presents: "+
+    "<b><#selectbg_g>xsentinelKERNEL</#></b>."+
+    "This setup wizard will help you to configure your chemlock.\n\n"+
+    "<b>Infos:</b>\n"+
+    "Name: <b><#selectbg_g>"+ini_get("rom_name")+"</#></b>\n"+
+    "Version: <b><#selectbg_g>"+ini_get("rom_version")+"</#></b>\n"+
+    "Developer: <b><#selectbg_g>"+ini_get("rom_author")+"</#></b>\n"+
+    "Device: <b><#selectbg_g>"+ini_get("rom_device")+"</#></b>\n\n\n\n"+
+    "Press <b>Next</b> to continue...",
+    "@install"
+);
+
+###################################################################################################################
+#
+# KERNEL
+#
+
+selectbox(
+  #-- Title
+    "SELECT YOU KERNEL",
+
+  #-- Sub Title
+    "Select your device Device:",
+
+  #-- Icon: <AROMA Resource Dir>/icons/personalize.png or <ThemeDir>/icon.personalize.png
+    "@kernel",
+
+  #-- Will be saved in /tmp/aroma/lang.prop
+    "device.prop",
+
+  #---------------------------------[ Selectbox Without Group ]----------------------------------#
+  # TITLE            |  SUBTITLE                                                 | Initial Value #
+  #------------------+-----------------------------------------------------------+---------------#
+    "XSentinel Kernel",                        "J700F-H-M",                     1,
+    "None",                                "do not install any kernel",        0
+  #--------[ Initial Value = 0: Unselected, 1: Selected, 2: Group Item, 3: Not Visible ]---------#
+);
+
+###################################################################################################################
+#
+# INSTALLATION BEGIN
+
+ini_set("text_next", "Install");
+
+viewbox(
+    "xsentinelKERNEL",
+    "Installer is ready to configure this chemlock.\n\n"+
+    "Press <b>Install</b> to start.\n\n"+
+    "If you want to review or change any of your preferences, press <b>Back</b>.",
+    "@install"
+);
+
+##
+#
+# Next Button is "Finish"
+#
+ini_set("text_next", "Next");
+ini_set("icon_next", "@next");
+
+###################################################################################################################
+#
+# INSTALLATION PROCESS
+#
+setvar("retstatus",
+  install(
+      "xsentinelKERNEL",
+      "Installer is flashing the rom.\n"+
+      "Please wait...",
+      "@install",
+      "Install finished!"
+  )
+);
+
+###################################################################################################################
+#
+# STEP 6 - FINISH MESSAGE, Add Checkbox to Reboot or No. Save in "reboot_it" variable
+#
+# You can use return value or "reboot_it" variable to retrive checkbox value
+# Example:
+# if (checkviewbox(....)=="1" then
+#    ... checked ...
+# endif;
+#
+checkviewbox(
+    "xsentinelKERNEL",
+    "<b><#selectbg_g>"+ini_get("rom_name")+"</#></b> was installed successfully on this chemlock! "+
+    "Make a full reboot of system first to install mods/ota updates. Enjoy!",
+
+  #-- Icon
+    "@install",
+
+  #-- Checkbox Text
+    "Reboot to system",
+
+  #-- Initial Checkbox value ( 0=unchecked, 1=checked ) -  (Optional, default:0)
+    "1",
+
+  #-- Save checked value in variable "reboot_it" (Optional)
+    "reboot_it"
+);
+
+###
+#
+# Check if reboot checkbox was checked
+if
+  getvar("reboot_it")=="1"
+then
+  #
+  # reboot("onfinish");   - Reboot if anything finished
+  # reboot("now");        - Reboot Directly
+  # reboot("disable");    - If you set reboot("onfinish") before, use this command to revert it.
+  #
+  reboot("onfinish");
+endif;
+
+#---- FINISH
