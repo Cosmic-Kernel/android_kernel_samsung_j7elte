@@ -1,0 +1,68 @@
+<b><#selectbg_g>v179</#></b>
+<b>Supports J700FHM</b>
+
+<*> ADB Insecure
+<*> Acceleration module
+<*> Aligned Wakeup sources
+<*> Avoid multiple memory leaks
+<*> Battery Force Cast (Needs a kernel manager)
+<*> Battery/Performance improved
+<*> Boeffla Wakelocks & Sensor Wakelocks
+<*> CPU OC upto 1700MHz
+<*> CRC Controllable
+<*> CRC Disabled
+<*> Charging better
+<*> Compiled with Latest Aarch64
+<*> Compiler Optimizations
+<*> CPU Boost support
+<*> Cryptographic Performance boosts
+<*> Disabled DM-verify
+<*> Disabled Knox
+<*> Disabled RKP
+<*> Disabled TIMA
+<*> Disabled Wi-fi Debugging for Performance
+<*> Disabled trace & root restrictions
+<*> Enabled F2FS
+<*> Enabled NTFS
+<*> F-Sync Disabled
+<*> F-Sync Toggle
+<*> Faster Doze
+<*> FIOPS/BFQ and more I/O schedulers
+<*> GPU UC upto 800 Mhz
+<*> Hidden Governors
+<*> Huge Battery life + Performance
+<*> Improved Random Algorithm
+<*> Improved Video Streaming
+<*> Improved throttling response
+<*> Increase CPU-idle
+<*> Increased CPU relaxing
+<*> Init Support
+<*> Kernel Debugging Disabled
+<*> Knox 0x0
+<*> Made more optimisation on GPU
+<*> More SD read/write speed
+<*> Multiple Marshmallow drivers
+<*> Multiple CPU frequency improvements
+<*> Multiple security patches from 2020
+<*> NVIDEA based Enhanced power efficiency
+<*> No Samsung RMM
+<*> NOOP when screen-off
+<*> Optimised Console buffer
+<*> Optimised CPU frequency switching
+<*> Optimised Dynamic Read ahead
+<*> Optimised Governors
+<*> Optimised Video Offsets
+<*> Optimised compression support
+<*> Optimised task search
+<*> Optimized Sched Runtime for Performance
+<*> PEQT Commits for increased battery
+<*> Permissive
+<*> Private Mod support
+<*> RCU Boost
+<*> Removed Se-Android Enforcing
+<*> Safety Net Bypass
+<*> Support Android 7.1.2
+<*> TCP Tweaks
+<*> Updated Ramdisk
+<*> Upstreamed to 3.10.108 (End-of-Life)
+<*> Wireguard September 2020 Support
