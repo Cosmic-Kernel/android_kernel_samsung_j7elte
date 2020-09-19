@@ -1,0 +1,7 @@
+#!/system/bin/sh
+
+chmod 644 /sys/power/cpufreq_max_limit
+
+chmod 644 /sys/class/misc/mali0/device/dvfs_max_lock
+
+echo "0" > /sys/class/input_booster/level
