@@ -1249,26 +1249,45 @@ skip_swelling_chek:
 static void set_swelling_current(struct sec_battery_info *battery)
 {
 	int charging_current = battery->pdata->charging_current[battery->cable_type].fast_charging_current;
-
+	int topoff_current = battery->pdata->charging_current[battery->cable_type].full_check_current_1st;
 	union power_supply_propval value = {0, };
+
+		/* check topoff current */
+	if (battery->charging_mode == SEC_BATTERY_CHARGING_2ND &&
+			battery->pdata->full_check_type_2nd == SEC_BATTERY_FULLCHARGED_CHGPSY) {
+			topoff_current = battery->pdata->charging_current[battery->cable_type].full_check_current_2nd;
+	}
 
 	if (battery->current_event & SEC_BAT_CURRENT_EVENT_LOW_TEMP_SWELLING) {
 		charging_current = (charging_current > battery->pdata->swelling_low_temp_current) ?
-			battery->pdata->swelling_low_temp_current : charging_current;
+									battery->pdata->swelling_low_temp_current : charging_current;
+		topoff_current = (topoff_current > battery->pdata->swelling_low_temp_topoff) ?
+									battery->pdata->swelling_low_temp_topoff : topoff_current;
 	} else if (battery->current_event & SEC_BAT_CURRENT_EVENT_HIGH_TEMP_SWELLING) {
 		charging_current = (charging_current > battery->pdata->swelling_high_temp_current) ?
-			battery->pdata->swelling_high_temp_current : charging_current;
+									battery->pdata->swelling_high_temp_current : charging_current;
+		topoff_current = (topoff_current > battery->pdata->swelling_high_temp_topoff) ?
+									battery->pdata->swelling_high_temp_topoff : topoff_current;
 	} else if (battery->current_event & SEC_BAT_CURRENT_EVENT_LOW_TEMP) {
 		charging_current = (charging_current > battery->pdata->swelling_low_temp_current) ?
-			battery->pdata->swelling_low_temp_current : charging_current;
+									battery->pdata->swelling_low_temp_current : charging_current;
 	}
 
 	if (battery->charging_current != charging_current) {
 		value.intval = charging_current;
-		pr_info(" %s Charging_current = %d \n", __func__ , charging_current );
+		pr_info(" %s: Charging current = %d \n", __func__ , charging_current);
 		psy_do_property(battery->pdata->charger_name, set,
 				POWER_SUPPLY_PROP_CURRENT_AVG, value);
 		battery->charging_current = charging_current;
+	}
+
+	/* set topoff current */
+	if (battery->topoff_current != topoff_current) {
+		value.intval = topoff_current;
+		pr_info(" %s: Topoff current = %d \n", __func__ , topoff_current);
+		psy_do_property(battery->pdata->charger_name, set,
+				POWER_SUPPLY_PROP_CURRENT_FULL, value);
+		battery->topoff_current = topoff_current;
 	}
 }
 
@@ -6370,6 +6389,7 @@ static int __devinit sec_battery_probe(struct platform_device *pdev)
 	battery->check_adc_count = 0;
 	battery->check_adc_value = 0;
 
+	battery->topoff_current = 0;
 	battery->charging_start_time = 0;
 	battery->charging_passed_time = 0;
 	battery->charging_next_time = 0;

@@ -53,7 +53,7 @@
 			fuelgauge,fuel_int = <&gpa0 1 0>;
 			fuelgauge,fuel_alert_soc = <2>;
 			fuelgauge,capacity_max = <990>;
-			fuelgauge,capacity_max_margin = <70>;
+			fuelgauge,capacity_max_margin = <200>;
 			fuelgauge,capacity_min = <0>;
 			fuelgauge,capacity_calculation_type = <28>;
 			fuelgauge,type_str = "SDI";
@@ -75,13 +75,13 @@
 		battery0,rs_value = <0x1ae 0x47a 0x3800 0x007a>; /*rs mix_factor max min*/
 		battery0,vit_period = <0x3506>;
 		battery0,mix_value = <0x0403 0x0004>; /*mix_rate init_blank*/
-		battery0,topoff_soc = <0x0 0x05>; /*enable soc*/
+		battery0,topoff_soc = <0x1 0x05>; /*enable soc*/
 		battery0,volt_cal = <0x809e>;
 		battery0,curr_cal = <0x6F85>;
 		battery0,charge_offset_cal = <0x04>;
 		battery0,v_max_table = <0x2261 0x2234 0x2208>;
 		battery0,q_max_table = <0x168F 0x161F 0x15AF>;
-		battery0,data_ver = <0x04>;
+		battery0,data_ver = <0x05>;
 	};
 
 	battery {
@@ -172,7 +172,7 @@
 		   SEC_BATTERY_FULL_CONDITION_NOTIMEFULL |
 		   SEC_BATTERY_FULL_CONDITION_VCELL */
 		battery,full_condition_type = <13>;
-		battery,full_condition_soc = <93>;
+		battery,full_condition_soc = <91>;
 		battery,full_condition_vcell = <4200>;
 
 		battery,recharge_check_count = <2>;
@@ -226,7 +226,7 @@
 
 		battery,swelling_drop_float_voltage = <4150>;
 		battery,swelling_high_rechg_voltage = <4000>;
-		battery,swelling_low_rechg_voltage = <4200>;
+		battery,swelling_low_rechg_voltage = <4000>;
 		
 		battery,swelling_full_check_current_2nd = <150>; /* 0.05C */
 		

@@ -197,6 +197,7 @@ struct sec_battery_info {
 
 	unsigned int full_check_cnt;
 	unsigned int recharge_check_cnt;
+	int topoff_current;
 
 	/* wireless charging enable*/
 	int wc_enable;
