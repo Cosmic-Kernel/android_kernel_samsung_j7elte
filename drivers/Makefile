@@ -59,7 +59,7 @@ obj-$(CONFIG_VBUS_NOTIFIER)	+= staging/samsung/sec_notifier/
 obj-$(CONFIG_USE_MUIC)		+= muic/
 
 obj-$(CONFIG_PARPORT)		+= parport/
-obj-y				+= base/ block/ misc/ mfd/ nfc/
+obj-y				+= base/ block/ misc/ mfd/
 obj-$(CONFIG_NUBUS)		+= nubus/
 obj-y				+= macintosh/
 obj-$(CONFIG_IDE)		+= ide/
@@ -141,7 +141,6 @@ obj-y				+= clk/
 
 obj-$(CONFIG_MAILBOX)		+= mailbox/
 obj-$(CONFIG_HWSPINLOCK)	+= hwspinlock/
-obj-$(CONFIG_NFC)		+= nfc/
 obj-$(CONFIG_GPS_LSI_S5N6420)	+= gps/
 obj-$(CONFIG_GPS_BCMxxxxx)	+= gps/
 obj-$(CONFIG_IOMMU_SUPPORT)	+= iommu/
