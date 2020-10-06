@@ -82,31 +82,25 @@ enum {
 	PROXIMITY_ENABLED = BIT(1),
 };
 
-/* register settings */
-static u16 als_reg_setting[ALS_REG_NUM][2] = {
-	{REG_CS_CONF1, 0x10},	/* enable */
-	{REG_CS_CONF1, 0x11},	/* disable */
-};
+/*lightsensor default setting*/
+#define LIGHT_ENABLE		0x10
+#define LIGHT_DISABLE		0x11
 
-#if defined(FEATURE_SENSOR_A5XLTE) || defined(FEATURE_SENSOR_A7XLTE)
 #define CAL_SKIP_ADC		11
 #define CAL_FAIL_ADC		18
+
+#define PS_CONF1_VALUE		0x7748
+/* register settings */
+static u16 als_reg_setting[ALS_REG_NUM][2] = {
+	{REG_CS_CONF1, LIGHT_ENABLE},	/* enable */
+	{REG_CS_CONF1, LIGHT_DISABLE},	/* disable */
+};
 static u16 ps_reg_init_setting[PS_REG_NUM][2] = {
-	{REG_PS_CONF1, 0x6768},		/* REG_PS_CONF1 */
+	{REG_PS_CONF1, PS_CONF1_VALUE},		/* REG_PS_CONF1 */
 	{REG_PS_CONF3, 0x0000},		/* REG_PS_CONF3 */
 	{REG_PS_THD, 0x0110D},		/* REG_PS_THD */
 	{REG_PS_CANC, DEFAULT_TRIM},	/* REG_PS_CANC */
 };
-#else
-#define CAL_SKIP_ADC		8
-#define CAL_FAIL_ADC		18
-static u16 ps_reg_init_setting[PS_REG_NUM][2] = {
-	{REG_PS_CONF1, 0x7308},	/* REG_PS_CONF1 */
-	{REG_PS_CONF3, 0x0000},	/* REG_PS_CONF3 */
-	{REG_PS_THD, 0x01411},	/* REG_PS_THD */
-	{REG_PS_CANC, DEFAULT_TRIM},	/* REG_PS_CANC */
-};
-#endif
 
 /* Change threshold value on the midas-sensor.c */
 enum {
@@ -138,8 +132,10 @@ struct cm36655_data {
 	struct hrtimer prox_timer;
 	struct workqueue_struct *light_wq;
 	struct workqueue_struct *prox_wq;
+	struct workqueue_struct *prox_wq_irq;
 	struct work_struct work_light;
 	struct work_struct work_prox;
+	struct work_struct work_prox_irq;
 	struct device *prox_dev;
 	struct device *light_dev;
 #if defined(CONFIG_SENSORS_CM36655_LEDA_EN_REGULATOR)
@@ -159,6 +155,9 @@ struct cm36655_data {
 	u16 white_data;
 	int count_log_time;
 	unsigned int prox_result;
+
+	u64 old_timestamp;
+	u8 prox_val;
 };
 
 int cm36655_i2c_read_word(struct cm36655_data *cm36655, u8 command, u16 *val)
@@ -348,7 +347,7 @@ static int proximity_open_cancelation(struct cm36655_data *data)
 		err = -EIO;
 	}
 
-	if (buf < CAL_SKIP_ADC)
+	if (buf < data->pdata->cal_skip_adc)
 		goto exit;
 
 	ps_reg_init_setting[PS_CANCEL][CMD] = buf;
@@ -385,13 +384,16 @@ static int proximity_store_cancelation(struct device *dev, bool do_calib)
 		ps_reg_init_setting[PS_CANCEL][CMD] = ps_data;
 		mutex_unlock(&cm36655->read_lock);
 
-		if (ps_reg_init_setting[PS_CANCEL][CMD] < CAL_SKIP_ADC) {
+		if (ps_reg_init_setting[PS_CANCEL][CMD] < 
+			cm36655->pdata->cal_skip_adc) {
 			ps_reg_init_setting[PS_CANCEL][CMD] =
 				cm36655->pdata->default_trim;
-			SENSOR_INFO("crosstalk <= %d SKIP!!\n", CAL_SKIP_ADC);
+			SENSOR_INFO("crosstalk <= %d SKIP!!\n",
+				cm36655->pdata->cal_skip_adc);
 			cm36655->prox_result = 2;
 			err = 1;
-		} else if (ps_reg_init_setting[PS_CANCEL][CMD] < CAL_FAIL_ADC) {
+		} else if (ps_reg_init_setting[PS_CANCEL][CMD] < 
+				cm36655->pdata->cal_fail_adc) {
 			ps_reg_init_setting[PS_CANCEL][CMD] =
 					cm36655->pdata->default_trim+ps_data;
 			SENSOR_INFO("crosstalk_offset = %u Canceled",
@@ -404,7 +406,8 @@ static int proximity_store_cancelation(struct device *dev, bool do_calib)
 		} else {
 			ps_reg_init_setting[PS_CANCEL][CMD] =
 				cm36655->pdata->default_trim;
-			SENSOR_INFO("crosstalk >= %d\n FAILED!!", CAL_FAIL_ADC);
+			SENSOR_INFO("crosstalk >= %d\n FAILED!!",
+				cm36655->pdata->cal_fail_adc);
 			ps_reg_init_setting[PS_THD][CMD] =
 				((cm36655->pdata->default_hi_thd << 8) & 0xff00)
 				| (cm36655->pdata->default_low_thd & 0xff);
@@ -610,6 +613,8 @@ static ssize_t proximity_enable_store(struct device *dev,
 	struct cm36655_data *cm36655 = dev_get_drvdata(dev);
 	bool new_value;
 
+	cm36655->old_timestamp = 0LL;
+
 	if (sysfs_streq(buf, "1"))
 		new_value = true;
 	else if (sysfs_streq(buf, "0"))
@@ -618,6 +623,7 @@ static ssize_t proximity_enable_store(struct device *dev,
 		SENSOR_ERR("invalid value %d\n", *buf);
 		return -EINVAL;
 	}
+	SENSOR_INFO("proximity onoff :%d \n",new_value);
 
 #if defined(CONFIG_SENSORS_CM36655_RESET_DEFENCE_CODE)
 	if (cm36655->reset_state == ON) {
@@ -665,8 +671,12 @@ static ssize_t proximity_enable_store(struct device *dev,
 	} else if (!new_value && (cm36655->power_state & PROXIMITY_ENABLED)) {
 		cm36655->power_state &= ~PROXIMITY_ENABLED;
 
+		if (cm36655->pdata->is_defence) {
+			cancel_work_sync(&cm36655->work_prox_irq);
+		}
 		disable_irq_wake(cm36655->irq);
 		disable_irq(cm36655->irq);
+
 		/* disable settings */
 		cm36655_i2c_write_word(cm36655, REG_PS_CONF1, 0x0001);
 #if defined(CONFIG_SENSORS_CM36655_LEDA_EN_REGULATOR)
@@ -1070,6 +1080,33 @@ irqreturn_t cm36655_irq_thread_fn(int irq, void *data)
 	return IRQ_HANDLED;
 }
 
+irqreturn_t cm36655_irq_thread_defence_fn(int irq, void *data)
+{
+	struct cm36655_data *cm36655 = data;
+
+	if(cm36655->pdata->irq != -1) {
+		struct timespec ts = ktime_to_timespec(ktime_get_boottime());
+		u64 timestamp = ts.tv_sec * 1000000000ULL + ts.tv_nsec;
+
+		/*ignore if interrupt is occured in 10ms*/
+		if((timestamp - cm36655->old_timestamp < 10000000LL)
+			&& (cm36655->old_timestamp != 0)) {
+			SENSOR_ERR("exception case!!\n");
+			cm36655->old_timestamp = timestamp;
+			return IRQ_HANDLED;
+		}
+		cm36655->prox_val = gpio_get_value(cm36655->pdata->irq);
+		cm36655->old_timestamp = timestamp;
+
+		wake_lock_timeout(&cm36655->prox_wake_lock, 3 * HZ);
+		queue_work(cm36655->prox_wq_irq, &cm36655->work_prox_irq);
+	}
+
+	SENSOR_INFO("cm36655 irq_thread is called\n");
+
+	return IRQ_HANDLED;
+}
+
 static int cm36655_setup_reg(struct cm36655_data *cm36655)
 {
 	int err = 0, i = 0;
@@ -1133,9 +1170,17 @@ static int cm36655_setup_irq(struct cm36655_data *cm36655)
 	}
 
 	cm36655->irq = gpio_to_irq(pdata->irq);
-	rc = request_threaded_irq(cm36655->irq, NULL, cm36655_irq_thread_fn,
+
+	if (pdata->is_defence) {
+		rc = request_threaded_irq(cm36655->irq, NULL, cm36655_irq_thread_defence_fn,
 		IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
 		"proximity_int", cm36655);
+	}
+	else {
+		rc = request_threaded_irq(cm36655->irq, NULL, cm36655_irq_thread_fn,
+		IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING | IRQF_ONESHOT,
+			"proximity_int", cm36655);
+	}
 	if (rc < 0) {
 		SENSOR_ERR("irq:%d failed for qpio:%d err:%d\n",
 			cm36655->irq, pdata->irq, rc);
@@ -1232,6 +1277,29 @@ static void cm36655_get_avg_val(struct cm36655_data *cm36655)
 	cm36655->avg[2] = max;
 }
 
+static void cm36655_work_func_prox_irq(struct work_struct *work)
+{
+	struct cm36655_data *cm36655 = container_of(work, struct cm36655_data,
+						  work_prox_irq);
+	u16 ps_data = 0;
+
+	/* disable INT */
+	disable_irq_nosync(cm36655->pdata->irq);
+
+	cm36655_i2c_read_word(cm36655, REG_PS_DATA, &ps_data);
+
+	if (cm36655->power_state & PROXIMITY_ENABLED) {
+		// 0 is close, 1 is far
+		input_report_abs(cm36655->prox_input_dev, ABS_DISTANCE, cm36655->prox_val);
+		input_sync(cm36655->prox_input_dev);
+	}
+
+	SENSOR_INFO("val = %u, ps_data = %u (close:0, far:1)\n", cm36655->prox_val, ps_data);
+
+	/* enable INT */
+	enable_irq(cm36655->pdata->irq);
+}
+
 static void cm36655_work_func_prox(struct work_struct *work)
 {
 	struct cm36655_data *cm36655 = container_of(work, struct cm36655_data,
@@ -1257,6 +1325,8 @@ static int cm36655_parse_dt(struct device *dev,
 	struct device_node *np = dev->of_node;
 	enum of_gpio_flags flags;
 	int ret;
+	u32 als_reg_set;
+	u32 ps_conf1;
 
 	pdata->irq = of_get_named_gpio_flags(np, "cm36655,irq_gpio", 0, &flags);
 	if (pdata->irq < 0) {
@@ -1312,6 +1382,38 @@ static int cm36655_parse_dt(struct device *dev,
 		((pdata->default_hi_thd << 8) & 0xff00)
 		| (pdata->default_low_thd & 0xff);
 
+	ret = of_property_read_u32(np, "cm36655,cal_skip_adc",
+		&pdata->cal_skip_adc);
+	if (ret < 0) {
+		SENSOR_INFO("Cannot set cal_skip_adc\n");
+		pdata->cal_skip_adc = CAL_SKIP_ADC;
+	}
+
+	ret = of_property_read_u32(np, "cm36655,cal_fail_adc",
+		&pdata->cal_fail_adc);
+	if (ret < 0) {
+		SENSOR_INFO("Cannot set cal_fail_adc\n");
+		pdata->cal_fail_adc = CAL_FAIL_ADC;
+	}
+
+	ret = of_property_read_u32(np, "cm36655,als_reg_set", &als_reg_set);
+	if (ret < 0) {
+		SENSOR_INFO("[SENSOR]: %s - Cannot set als_reg_setting\n",
+			__func__);
+		als_reg_setting[0][CMD] = LIGHT_ENABLE;
+		als_reg_setting[1][CMD] = LIGHT_DISABLE;
+	} else {
+		als_reg_setting[0][CMD] = als_reg_set;
+		als_reg_setting[1][CMD] = als_reg_set | 0x0001;
+	}
+
+	ret = of_property_read_u32(np, "cm36655,ps_conf1", &ps_conf1);
+	if (ret < 0) {
+		SENSOR_INFO("Cannot set cal_fail_adc\n");
+		ps_reg_init_setting[PS_CONF1][CMD] = PS_CONF1_VALUE;
+	} else
+		ps_reg_init_setting[PS_CONF1][CMD] = ps_conf1;
+
 	ret = of_property_read_u32(np, "cm36655,default_trim",
 		&pdata->default_trim);
 	if (ret < 0) {
@@ -1319,10 +1421,21 @@ static int cm36655_parse_dt(struct device *dev,
 		pdata->default_trim = DEFAULT_TRIM;
 	}
 
-	SENSOR_INFO("DefaultTHS[%d/%d] CancelTHD[%d/%d] PS_THD[%x] TRIM[%d]\n",
+	ret = of_property_read_u32(np, "cm36655,is_defence",
+		&pdata->is_defence);
+	if (ret < 0) {
+		SENSOR_INFO("Defence code is not applied\n");
+		pdata->is_defence = 0;
+	}
+
+	SENSOR_INFO("DefaultTHD[%d/%d] CancelTHD[%d/%d] PS_THD[0x%2x] CAL_SKIP[%d]\
+		CAL_FAIL[%d] ALS_REG_SETTING[0x%2x] ALS_REG_SETTING[0x%2x] PS_CONF[0x%2x] TRIM[%d] DEFENCE[%d]\n",
 		pdata->default_hi_thd, pdata->default_low_thd,
 		pdata->cancel_hi_thd, pdata->cancel_low_thd,
-		ps_reg_init_setting[PS_THD][CMD], pdata->default_trim);
+		ps_reg_init_setting[PS_THD][CMD], pdata->cal_skip_adc,
+		pdata->cal_fail_adc, als_reg_setting[0][CMD],
+		als_reg_setting[1][CMD], ps_reg_init_setting[PS_CONF1][CMD],
+		pdata->default_trim, pdata->is_defence);
 	return 0;
 }
 #else
@@ -1583,6 +1696,15 @@ static int cm36655_i2c_probe(struct i2c_client *client,
 	/* this is the thread function we run on the work queue */
 	INIT_WORK(&cm36655->work_prox, cm36655_work_func_prox);
 
+	/* this is defence code for i2c noise */
+	if (pdata->is_defence) {
+		cm36655->prox_wq_irq = create_singlethread_workqueue("cm36655_wq_irq");
+		if (cm36655->prox_wq_irq)
+			INIT_WORK(&cm36655->work_prox_irq, cm36655_work_func_prox_irq);
+		else
+			pdata->is_defence = 0;
+	}
+
 	/* allocate lightsensor input_device */
 	cm36655->light_input_dev = input_allocate_device();
 	if (!cm36655->light_input_dev) {
@@ -1668,6 +1790,9 @@ err_sensors_create_symlink_light:
 	input_unregister_device(cm36655->light_input_dev);
 err_input_register_device_light:
 err_input_allocate_device_light:
+	if (pdata->is_defence) {
+		destroy_workqueue(cm36655->prox_wq_irq);
+	}
 	destroy_workqueue(cm36655->prox_wq);
 err_create_prox_workqueue:
 	free_irq(cm36655->irq, cm36655);
@@ -1726,6 +1851,9 @@ static int cm36655_i2c_remove(struct i2c_client *client)
 	destroy_workqueue(cm36655->light_wq);
 	destroy_workqueue(cm36655->prox_wq);
 
+	if (cm36655->pdata->is_defence) {
+		destroy_workqueue(cm36655->prox_wq_irq);
+	}
 	/* sysfs destroy */
 	sensors_unregister(cm36655->light_dev, light_sensor_attrs);
 	sensors_unregister(cm36655->prox_dev, prox_sensor_attrs);

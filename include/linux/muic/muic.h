@@ -65,6 +65,11 @@ enum {
 	SWITCH_SEL_AFC_DISABLE_MASK	= 0x100,
 };
 
+/* bootparam CHARGING_MODE */
+enum {
+	CH_MODE_AFC_DISABLE_VAL = 0x31, /* char '1' */
+};
+
 /* MUIC ADC table */
 typedef enum {
 	ADC_GND			= 0x00,
@@ -152,6 +157,7 @@ typedef enum {
 	ATTACHED_DEV_TYPE2_CHG_MUIC,
 
 	ATTACHED_DEV_UNSUPPORTED_ID_VB_MUIC,
+	ATTACHED_DEV_UNDEFINED_RANGE_MUIC,
 	ATTACHED_DEV_UNKNOWN_MUIC,
 
 	ATTACHED_DEV_NUM,
@@ -188,5 +194,6 @@ struct muic_platform_data {
 };
 
 int get_switch_sel(void);
+int get_afc_mode(void);
 
 #endif /* __MUIC_H__ */

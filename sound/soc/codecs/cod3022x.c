@@ -666,8 +666,31 @@ static int dac_ev(struct snd_soc_dapm_widget *w, struct snd_kcontrol *kcontrol,
 	return 0;
 }
 
+static int cod3022x_adc_mute_use_count(struct snd_soc_codec *codec, bool on)
+{
+	struct cod3022x_priv *cod3022x = snd_soc_codec_get_drvdata(codec);
+	int process_event = 0;
+
+	if(on) {
+		atomic_inc(&cod3022x->adc_mute_use_count);
+		if(atomic_read(&cod3022x->adc_mute_use_count) == 1)
+			process_event = 1;
+	} else {
+		atomic_dec(&cod3022x->adc_mute_use_count);
+		if(atomic_read(&cod3022x->adc_mute_use_count) == 0)
+			process_event = 1;
+	}
+
+	dev_dbg(codec->dev, "%s called, mute process_evnet = %d\n", __func__, process_event);
+	return process_event;
+}
+
 static void cod3022x_adc_digital_mute(struct snd_soc_codec *codec, bool on)
 {
+	dev_dbg(codec->dev, "%s called, on = %d\n", __func__, on);
+	if(!cod3022x_adc_mute_use_count(codec, on))
+		return;
+
 	if (on)
 		snd_soc_update_bits(codec, COD3022X_42_ADC1,
 				ADC1_MUTE_AD_EN_MASK, ADC1_MUTE_AD_EN_MASK);
@@ -699,13 +722,17 @@ static int cod3022x_mute_mic2(bool on)
 			on ? "Mute" : "Unmute");
 
 	if (on) {
+		mutex_lock(&g_cod3022x->adc_mute_lock);
 		cod3022x_adc_digital_mute(g_cod3022x->codec, true);
+		mutex_unlock(&g_cod3022x->adc_mute_lock);
 		snd_soc_update_bits(g_cod3022x->codec, COD3022X_12_PD_AD2,
 							PDB_MIC2_MASK, 0);
 	} else {
 		snd_soc_update_bits(g_cod3022x->codec, COD3022X_12_PD_AD2,
 					PDB_MIC2_MASK, PDB_MIC2_MASK);
+		mutex_lock(&g_cod3022x->adc_mute_lock);
 		cod3022x_adc_digital_mute(g_cod3022x->codec, false);
+		mutex_unlock(&g_cod3022x->adc_mute_lock);
 	}
 
 	return 0;
@@ -747,7 +774,9 @@ static int cod3022x_capture_init(struct snd_soc_codec *codec)
 	snd_soc_write(codec, COD3022X_D0_CTRL_IREF1, 0x0);
 
 	/* As per SFR v1.14, enable ADC digital mute before configuring ADC */
+	mutex_lock(&cod3022x->adc_mute_lock);
 	cod3022x_adc_digital_mute(codec, true);
+	mutex_unlock(&cod3022x->adc_mute_lock);
 
 	snd_soc_update_bits(codec, COD3022X_40_DIGITAL_POWER,
 			PDB_ADCDIG_MASK | RSTB_OVFW_DA_MASK,
@@ -798,7 +827,9 @@ static int cod3022x_capture_deinit(struct snd_soc_codec *codec)
 		cod3022x_capture_deinit_manual_mode(codec);
 
 	/* As per SFR v1.14, disable ADC digital mute after configuring ADC */
+	mutex_lock(&cod3022x->adc_mute_lock);
 	cod3022x_adc_digital_mute(codec, false);
+	mutex_unlock(&cod3022x->adc_mute_lock);
 
 	return 0;
 }
@@ -806,6 +837,8 @@ static int cod3022x_capture_deinit(struct snd_soc_codec *codec)
 static int adc_ev(struct snd_soc_dapm_widget *w, struct snd_kcontrol *kcontrol,
 		int event)
 {
+	struct cod3022x_priv *cod3022x = snd_soc_codec_get_drvdata(w->codec);
+
 	dev_dbg(w->codec->dev, "%s called, event = %d\n", __func__, event);
 
 	switch (event) {
@@ -814,12 +847,15 @@ static int adc_ev(struct snd_soc_dapm_widget *w, struct snd_kcontrol *kcontrol,
 
 	case SND_SOC_DAPM_POST_PMU:
 		/* As per SFR v1.14, disable ADC digital mute after configuring ADC */
-		cod3022x_adc_digital_mute(w->codec, false);
+		queue_work(cod3022x->adc_mute_wq,
+					&cod3022x->adc_mute_work);
 		break;
 
 	case SND_SOC_DAPM_PRE_PMD:
 		/* As per SFR v1.14, enable ADC digital mute before configuring ADC */
+		mutex_lock(&cod3022x->adc_mute_lock);
 		cod3022x_adc_digital_mute(w->codec, true);
+		mutex_unlock(&cod3022x->adc_mute_lock);
 		break;
 
 	default:
@@ -1860,11 +1896,15 @@ static int mic2_pga_ev(struct snd_soc_dapm_widget *w,
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
+		cod3022x_adc_digital_mute(w->codec, true);
 		cod3022_power_on_mic2(w->codec);
+		cod3022x_adc_digital_mute(w->codec, false);
 		break;
 
 	case SND_SOC_DAPM_PRE_PMD:
+		cod3022x_adc_digital_mute(w->codec, true);
 		cod3022_power_off_mic2(w->codec);
+		cod3022x_adc_digital_mute(w->codec, false);
 		break;
 	default:
 		break;
@@ -1889,11 +1929,15 @@ static int mic1_pga_ev(struct snd_soc_dapm_widget *w,
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
+		cod3022x_adc_digital_mute(w->codec, true);
 		cod3022_power_on_mic1(w->codec);
+		cod3022x_adc_digital_mute(w->codec, false);
 		break;
 
 	case SND_SOC_DAPM_PRE_PMD:
+		cod3022x_adc_digital_mute(w->codec, true);
 		cod3022_power_off_mic1(w->codec);
+		cod3022x_adc_digital_mute(w->codec, false);
 		break;
 
 	default:
@@ -1919,11 +1963,15 @@ static int linein_pga_ev(struct snd_soc_dapm_widget *w,
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
+		cod3022x_adc_digital_mute(w->codec, true);
 		cod3022_power_on_linein(w->codec);
+		cod3022x_adc_digital_mute(w->codec, false);
 		break;
 
 	case SND_SOC_DAPM_PRE_PMD:
+		cod3022x_adc_digital_mute(w->codec, true);
 		cod3022_power_off_linein(w->codec);
+		cod3022x_adc_digital_mute(w->codec, false);
 		break;
 
 	default:
@@ -2341,6 +2389,19 @@ static int cod3022x_dai_hw_params(struct snd_pcm_substream *substream,
 	return 0;
 }
 
+static void cod3022x_adc_mute_work(struct work_struct *work)
+{
+	struct cod3022x_priv *cod3022x =
+		container_of(work, struct cod3022x_priv, adc_mute_work);
+	struct snd_soc_codec *codec = cod3022x->codec;
+
+	mutex_lock(&cod3022x->adc_mute_lock);
+	msleep(100);
+	dev_dbg(codec->dev, "%s called\n", __func__);
+	cod3022x_adc_digital_mute(codec, false);
+	mutex_unlock(&cod3022x->adc_mute_lock);
+}
+
 static void cod3022x_jack_det_work(struct work_struct *work)
 {
 	struct cod3022x_priv *cod3022x =
@@ -2357,6 +2418,8 @@ static void cod3022x_jack_det_work(struct work_struct *work)
 	/* read adc for mic detect */
 		adc = cod3022x_adc_get_value(cod3022x);
 		dev_dbg(cod3022x->dev, " %s mic det adc  %d \n" , __func__, adc);
+
+		jackdet->adc_val = adc;
 
 		if ( adc > cod3022x->mic_adc_range )
 			jackdet->mic_det = true;
@@ -2597,7 +2660,8 @@ static irqreturn_t cod3022x_threaded_isr(int irq, void *data)
 	if (det_status_change) {
 		/* mic detection delay */
 		queue_delayed_work(cod3022x->jack_det_wq,
-			&cod3022x->jack_det_work, cod3022x->mic_det_delay);
+			&cod3022x->jack_det_work,
+			msecs_to_jiffies(cod3022x->mic_det_delay));
 		mutex_unlock(&cod3022x->key_lock);
 		goto out;
 	}
@@ -3230,6 +3294,14 @@ static int cod3022x_codec_probe(struct snd_soc_codec *codec)
 		return -ENOMEM;
 	}
 
+	INIT_WORK(&cod3022x->adc_mute_work , cod3022x_adc_mute_work);
+
+	cod3022x->adc_mute_wq = create_singlethread_workqueue("adc_mute_wq");
+	if (cod3022x->adc_mute_wq == NULL) {
+		dev_err(codec->dev, "Failed to create adc_mute_wq\n");
+		return -ENOMEM;
+	}
+
 	cod3022x_adc_start(cod3022x);
 
 	/* adc mixer setting initialised */
@@ -3260,6 +3332,7 @@ static int cod3022x_codec_probe(struct snd_soc_codec *codec)
 		}
 		mutex_init(&cod3022x->jackdet_lock);
 		mutex_init(&cod3022x->key_lock);
+		mutex_init(&cod3022x->adc_mute_lock);
 
 		ret = request_threaded_irq(
 				gpio_to_irq(cod3022x->int_gpio),
@@ -3310,6 +3383,7 @@ static int cod3022x_codec_remove(struct snd_soc_codec *codec)
 
 	destroy_workqueue(cod3022x->buttons_wq);
 	destroy_workqueue(cod3022x->jack_det_wq);
+	destroy_workqueue(cod3022x->adc_mute_wq);
 
 	cod3022x_adc_stop(cod3022x);
 
