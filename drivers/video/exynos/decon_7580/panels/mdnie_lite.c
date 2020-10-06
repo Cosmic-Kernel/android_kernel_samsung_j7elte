@@ -593,6 +593,51 @@ static ssize_t sensorRGB_store(struct device *dev,
 	return count;
 }
 
+static ssize_t mdnie_ldu_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	struct mdnie_info *mdnie = dev_get_drvdata(dev);
+	return sprintf(buf, "%d %d %d\n", mdnie->white_r,
+		mdnie->white_g, mdnie->white_b);
+}
+
+static ssize_t mdnie_ldu_store(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	struct mdnie_info *mdnie = dev_get_drvdata(dev);
+	mdnie_t *wbuf;
+	u8 mode, scenario;
+	int idx;
+	int ret;
+	struct mdnie_scr_info *scr_info = mdnie->tune->scr_info;
+
+	ret = sscanf(buf, "%d", &idx);
+	if (ret < 0)
+		return ret;
+
+	if((mdnie->tune->max_adjust_ldu != 0) && (mdnie->tune->adjust_ldu_table != NULL)){
+		if((idx >= 0) && (idx < mdnie->tune->max_adjust_ldu)){
+			mutex_lock(&mdnie->lock);
+			for (mode = 0; mode < MODE_MAX; mode++) {
+				for (scenario = 0; scenario <= EMAIL_MODE; scenario++) {
+					wbuf = mdnie->tune->main_table[scenario][mode].seq[scr_info->index].cmd;
+					if (IS_ERR_OR_NULL(wbuf))
+						continue;
+					if (scenario != EBOOK_MODE) {
+						wbuf[scr_info->white_r] = mdnie->tune->adjust_ldu_table[mode][idx * 3 + 0];
+						wbuf[scr_info->white_g] = mdnie->tune->adjust_ldu_table[mode][idx * 3 + 1];
+						wbuf[scr_info->white_b] = mdnie->tune->adjust_ldu_table[mode][idx * 3 + 2];
+					}
+				}
+			}
+			mutex_unlock(&mdnie->lock);
+			mdnie_update(mdnie);
+		}
+	}
+
+	return count;
+}
+
 #ifdef CONFIG_LCD_HMT
 static ssize_t hmtColorTemp_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -635,6 +680,7 @@ static struct device_attribute mdnie_attributes[] = {
 	__ATTR(auto_brightness, 0664, auto_brightness_show, auto_brightness_store),
 	__ATTR(mdnie, 0444, mdnie_show, NULL),
 	__ATTR(sensorRGB, 0664, sensorRGB_show, sensorRGB_store),
+	__ATTR(mdnie_ldu, 0664, mdnie_ldu_show, mdnie_ldu_store),
 #ifdef CONFIG_LCD_HMT
 	__ATTR(hmt_color_temperature, 0664, hmtColorTemp_show, hmtColorTemp_store),
 #endif

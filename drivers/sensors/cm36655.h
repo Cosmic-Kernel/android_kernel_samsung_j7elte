@@ -10,6 +10,8 @@ struct cm36655_platform_data {
 	int default_low_thd;
 	int cancel_hi_thd;
 	int cancel_low_thd;
+	int cal_skip_adc;
+	int cal_fail_adc;
 	int default_trim;
 
 #if defined(CONFIG_SENSORS_CM36655_RESET_DEFENCE_CODE)

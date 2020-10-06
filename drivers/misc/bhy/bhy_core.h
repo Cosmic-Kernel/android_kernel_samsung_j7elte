@@ -116,7 +116,7 @@ struct __attribute__((__packed__)) fifo_frame {
 #define MAX_ACCEL_4G            32768
 
 #define MODEL_NAME		"BHA250"
-#define FIRMWARE_REVISION	15120100
+#define FIRMWARE_REVISION	16041100
 
 
 /* CRYSTAL 32000 = 1 SEC */

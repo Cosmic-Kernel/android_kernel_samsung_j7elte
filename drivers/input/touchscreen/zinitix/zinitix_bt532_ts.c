@@ -2380,7 +2380,7 @@ static int  bt532_ts_open(struct input_dev *dev)
 	if (info == NULL)
 		return 0;
 
-	if((pdata->support_spay)&&(info->spay_enable)){
+	if((pdata->support_spay)&&(info->spay_enable)&&(info->sleep_mode)){
 		tsp_debug_info(true, &misc_info->client->dev, "%s, wake up\n", __func__);
 		write_cmd(info->client, BT532_WAKEUP_CMD);
 		info->sleep_mode = 0;

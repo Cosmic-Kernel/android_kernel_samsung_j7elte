@@ -65,6 +65,34 @@ static unsigned char *coordinate_data[MODE_MAX] = {
 	coordinate_data_1,
 };
 
+static unsigned char adjust_ldu_data_1[] = {
+	0xff, 0xff, 0xff,
+	0xf6, 0xfa, 0xff,
+	0xf4, 0xf8, 0xff,
+	0xe9, 0xf2, 0xff,
+	0xe2, 0xef, 0xff,
+	0xd4, 0xe8, 0xff,
+};
+
+static unsigned char adjust_ldu_data_2[] = {
+	0xff, 0xfa, 0xf1,
+	0xff, 0xfd, 0xf8,
+	0xff, 0xfd, 0xfa,
+	0xfa, 0xfd, 0xff,
+	0xf5, 0xfb, 0xff,
+	0xe5, 0xf3, 0xff,
+};
+
+static unsigned char *adjust_ldu_data[MODE_MAX] = {
+	adjust_ldu_data_1,
+	adjust_ldu_data_2,
+	adjust_ldu_data_2,
+	adjust_ldu_data_1,
+	adjust_ldu_data_1,
+	adjust_ldu_data_1,
+};
+
+
 static unsigned char GRAYSCALE_1[] = {
 	0xEC,
 	0x98, /* lce_on gain 0 00 0000 */
@@ -9407,6 +9435,8 @@ static struct mdnie_tune tune_info = {
 	.main_table = main_table,
 
 	.coordinate_table = coordinate_data,
+	.adjust_ldu_table = adjust_ldu_data,
+	.max_adjust_ldu = 6,
 	.scr_info = &scr_info,
 	.color_offset = {color_offset_f1, color_offset_f2, color_offset_f3, color_offset_f4}
 };

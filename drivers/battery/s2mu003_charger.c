@@ -546,13 +546,14 @@ static bool s2mu003_chg_init(struct s2mu003_charger_data *charger)
 	/* TOP-OFF debounce time set 256us */
 	s2mu003_assign_bits(charger->client, S2MU003_CHG_CTRL2, 0x3, 0x3);
 
-	/* Disable (set 0min TOP OFF Timer) */
+	/* Enable (set 30min TOP OFF Timer) */
 	ret = s2mu003_reg_read(charger->client, S2MU003_CHG_CTRL7);
 	ret &= ~0x1C;
+	ret |= 0x10;
 	s2mu003_reg_write(charger->client, S2MU003_CHG_CTRL7, ret);
 
-	s2mu003_reg_write(charger->client, S2MU003_CHG_DONE_DISABLE,
-			S2MU003_CHG_DONE_SEL << S2MU003_CHG_DONE_SEL_SHIFT);
+	s2mu003_reg_write(charger->client, S2MU003_CHG_DONE_DISABLE, 0x00);
+
 	s2mu003_clr_bits(charger->client,
 			S2MU003_CHG_CTRL1, S2MU003_EN_CHGT_MASK);
 
@@ -653,7 +654,14 @@ static bool s2mu003_get_batt_present(struct i2c_client *iic)
 
 static int s2mu003_get_charging_health(struct s2mu003_charger_data *charger)
 {
-	int ret = s2mu003_reg_read(charger->client, S2MU003_CHG_STATUS1);
+	int ret;
+
+	ret = s2mu003_reg_read(charger->client, S2MU003_CHG_CTRL6);
+	ret &= 0xFC;
+	ret |= 0x01;
+	s2mu003_reg_write(charger->client, S2MU003_CHG_CTRL6, ret); /* wdt clear */
+
+	ret = s2mu003_reg_read(charger->client, S2MU003_CHG_STATUS1);
 
 	if (ret < 0)
 		return POWER_SUPPLY_HEALTH_UNKNOWN;

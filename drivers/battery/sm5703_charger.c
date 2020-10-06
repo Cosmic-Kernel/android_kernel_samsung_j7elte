@@ -1035,10 +1035,6 @@ static int sec_chg_set_property(struct power_supply *psy,
 			charger->pdata->chg_float_voltage = val->intval;
 			sm5703_set_regulation_voltage(charger, val->intval);
 			break;
-		case POWER_SUPPLY_PROP_CURRENT_FULL:
-			__sm5703_set_termination_current_limit(
-					charger->sm5703->i2c_client, val->intval);
-			
 #endif
 		case POWER_SUPPLY_PROP_HEALTH:
 			/* charger->ovp = val->intval; */

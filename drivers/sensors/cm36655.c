@@ -82,31 +82,25 @@ enum {
 	PROXIMITY_ENABLED = BIT(1),
 };
 
-/* register settings */
-static u16 als_reg_setting[ALS_REG_NUM][2] = {
-	{REG_CS_CONF1, 0x10},	/* enable */
-	{REG_CS_CONF1, 0x11},	/* disable */
-};
+/*lightsensor default setting*/
+#define LIGHT_ENABLE		0x10
+#define LIGHT_DISABLE		0x11
 
-#if defined(FEATURE_SENSOR_A5XLTE) || defined(FEATURE_SENSOR_A7XLTE)
 #define CAL_SKIP_ADC		11
 #define CAL_FAIL_ADC		18
+
+#define PS_CONF1_VALUE		0x6768
+/* register settings */
+static u16 als_reg_setting[ALS_REG_NUM][2] = {
+	{REG_CS_CONF1, LIGHT_ENABLE},	/* enable */
+	{REG_CS_CONF1, LIGHT_DISABLE},	/* disable */
+};
 static u16 ps_reg_init_setting[PS_REG_NUM][2] = {
-	{REG_PS_CONF1, 0x6768},		/* REG_PS_CONF1 */
+	{REG_PS_CONF1, PS_CONF1_VALUE},		/* REG_PS_CONF1 */
 	{REG_PS_CONF3, 0x0000},		/* REG_PS_CONF3 */
 	{REG_PS_THD, 0x0110D},		/* REG_PS_THD */
 	{REG_PS_CANC, DEFAULT_TRIM},	/* REG_PS_CANC */
 };
-#else
-#define CAL_SKIP_ADC		8
-#define CAL_FAIL_ADC		18
-static u16 ps_reg_init_setting[PS_REG_NUM][2] = {
-	{REG_PS_CONF1, 0x7308},	/* REG_PS_CONF1 */
-	{REG_PS_CONF3, 0x0000},	/* REG_PS_CONF3 */
-	{REG_PS_THD, 0x01411},	/* REG_PS_THD */
-	{REG_PS_CANC, DEFAULT_TRIM},	/* REG_PS_CANC */
-};
-#endif
 
 /* Change threshold value on the midas-sensor.c */
 enum {
@@ -348,7 +342,7 @@ static int proximity_open_cancelation(struct cm36655_data *data)
 		err = -EIO;
 	}
 
-	if (buf < CAL_SKIP_ADC)
+	if (buf < data->pdata->cal_skip_adc)
 		goto exit;
 
 	ps_reg_init_setting[PS_CANCEL][CMD] = buf;
@@ -385,13 +379,16 @@ static int proximity_store_cancelation(struct device *dev, bool do_calib)
 		ps_reg_init_setting[PS_CANCEL][CMD] = ps_data;
 		mutex_unlock(&cm36655->read_lock);
 
-		if (ps_reg_init_setting[PS_CANCEL][CMD] < CAL_SKIP_ADC) {
+		if (ps_reg_init_setting[PS_CANCEL][CMD] < 
+			cm36655->pdata->cal_skip_adc) {
 			ps_reg_init_setting[PS_CANCEL][CMD] =
 				cm36655->pdata->default_trim;
-			SENSOR_INFO("crosstalk <= %d SKIP!!\n", CAL_SKIP_ADC);
+			SENSOR_INFO("crosstalk <= %d SKIP!!\n",
+				cm36655->pdata->cal_skip_adc);
 			cm36655->prox_result = 2;
 			err = 1;
-		} else if (ps_reg_init_setting[PS_CANCEL][CMD] < CAL_FAIL_ADC) {
+		} else if (ps_reg_init_setting[PS_CANCEL][CMD] < 
+				cm36655->pdata->cal_fail_adc) {
 			ps_reg_init_setting[PS_CANCEL][CMD] =
 					cm36655->pdata->default_trim+ps_data;
 			SENSOR_INFO("crosstalk_offset = %u Canceled",
@@ -404,7 +401,8 @@ static int proximity_store_cancelation(struct device *dev, bool do_calib)
 		} else {
 			ps_reg_init_setting[PS_CANCEL][CMD] =
 				cm36655->pdata->default_trim;
-			SENSOR_INFO("crosstalk >= %d\n FAILED!!", CAL_FAIL_ADC);
+			SENSOR_INFO("crosstalk >= %d\n FAILED!!",
+				cm36655->pdata->cal_fail_adc);
 			ps_reg_init_setting[PS_THD][CMD] =
 				((cm36655->pdata->default_hi_thd << 8) & 0xff00)
 				| (cm36655->pdata->default_low_thd & 0xff);
@@ -1257,6 +1255,8 @@ static int cm36655_parse_dt(struct device *dev,
 	struct device_node *np = dev->of_node;
 	enum of_gpio_flags flags;
 	int ret;
+	u32 als_reg_set;
+	u32 ps_conf1;
 
 	pdata->irq = of_get_named_gpio_flags(np, "cm36655,irq_gpio", 0, &flags);
 	if (pdata->irq < 0) {
@@ -1312,6 +1312,38 @@ static int cm36655_parse_dt(struct device *dev,
 		((pdata->default_hi_thd << 8) & 0xff00)
 		| (pdata->default_low_thd & 0xff);
 
+	ret = of_property_read_u32(np, "cm36655,cal_skip_adc",
+		&pdata->cal_skip_adc);
+	if (ret < 0) {
+		SENSOR_INFO("Cannot set cal_skip_adc\n");
+		pdata->cal_skip_adc = CAL_SKIP_ADC;
+	}
+
+	ret = of_property_read_u32(np, "cm36655,cal_fail_adc",
+		&pdata->cal_fail_adc);
+	if (ret < 0) {
+		SENSOR_INFO("Cannot set cal_fail_adc\n");
+		pdata->cal_fail_adc = CAL_FAIL_ADC;
+	}
+
+	ret = of_property_read_u32(np, "cm36655,als_reg_set", &als_reg_set);
+	if (ret < 0) {
+		SENSOR_INFO("[SENSOR]: %s - Cannot set als_reg_setting\n",
+			__func__);
+		als_reg_setting[0][CMD] = LIGHT_ENABLE;
+		als_reg_setting[1][CMD] = LIGHT_DISABLE;
+	} else {
+		als_reg_setting[0][CMD] = als_reg_set;
+		als_reg_setting[1][CMD] = als_reg_set | 0x0001;
+	}
+
+	ret = of_property_read_u32(np, "cm36655,ps_conf1", &ps_conf1);
+	if (ret < 0) {
+		SENSOR_INFO("Cannot set cal_fail_adc\n");
+		ps_reg_init_setting[PS_CONF1][CMD] = PS_CONF1_VALUE;
+	} else
+		ps_reg_init_setting[PS_CONF1][CMD] = ps_conf1;
+
 	ret = of_property_read_u32(np, "cm36655,default_trim",
 		&pdata->default_trim);
 	if (ret < 0) {
@@ -1319,10 +1351,14 @@ static int cm36655_parse_dt(struct device *dev,
 		pdata->default_trim = DEFAULT_TRIM;
 	}
 
-	SENSOR_INFO("DefaultTHS[%d/%d] CancelTHD[%d/%d] PS_THD[%x] TRIM[%d]\n",
+	SENSOR_INFO("DefaultTHD[%d/%d] CancelTHD[%d/%d] PS_THD[0x%2x] CAL_SKIP[%d]\
+		CAL_FAIL[%d] ALS_REG_SETTING[0x%2x] ALS_REG_SETTING[0x%2x] PS_CONF[0x%2x] TRIM[%d]\n",
 		pdata->default_hi_thd, pdata->default_low_thd,
 		pdata->cancel_hi_thd, pdata->cancel_low_thd,
-		ps_reg_init_setting[PS_THD][CMD], pdata->default_trim);
+		ps_reg_init_setting[PS_THD][CMD], pdata->cal_skip_adc,
+		pdata->cal_fail_adc, als_reg_setting[0][CMD],
+		als_reg_setting[1][CMD], ps_reg_init_setting[PS_CONF1][CMD],
+		pdata->default_trim);
 	return 0;
 }
 #else

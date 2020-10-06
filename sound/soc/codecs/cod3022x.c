@@ -1733,26 +1733,6 @@ static int epdrv_ev(struct snd_soc_dapm_widget *w,
 		snd_soc_update_bits(w->codec, COD3022X_13_PD_DA1,
 					RESETB_DCTL_MASK, RESETB_DCTL_MASK);
 
-		snd_soc_update_bits(w->codec, COD3022X_DC_CTRL_EPS,
-					CTMI_EP_A_MASK, CTMI_EP_A_MASK);
-
-		snd_soc_update_bits(w->codec, COD3022X_15_PD_DA3,
-					PDB_EP_CORE_MASK, PDB_EP_CORE_MASK);
-
-		snd_soc_update_bits(w->codec, COD3022X_15_PD_DA3,
-					PDB_EP_DRV_MASK, PDB_EP_DRV_MASK);
-		msleep(50);
-
-		snd_soc_update_bits(w->codec, COD3022X_15_PD_DA3,
-					PDB_EP_CORE_MASK, 0x00);
-
-		snd_soc_update_bits(w->codec, COD3022X_15_PD_DA3,
-					PDB_EP_DRV_MASK, 0x00);
-
-		snd_soc_update_bits(w->codec, COD3022X_DC_CTRL_EPS,
-				CTMI_EP_A_MASK,
-				(CTMI_EP_A_2_UA << CTMI_EP_A_SHIFT));
-
 		snd_soc_update_bits(w->codec, COD3022X_15_PD_DA3,
 					PDB_DOUBLER_MASK | PDB_CP_MASK,
 					PDB_DOUBLER_MASK | PDB_CP_MASK);
@@ -1795,10 +1775,6 @@ static int epdrv_ev(struct snd_soc_dapm_widget *w,
 			DAC1_SOFT_MUTE_MASK, DAC1_SOFT_MUTE_MASK);
 		msleep(24);
 
-		snd_soc_update_bits(w->codec, COD3022X_D8_CTRL_CP2,
-			CTMD_CP_H2L_MASK,
-			VIDD_HALF_VDD_DELAY_32MS << CTMD_CP_H2L_SHIFT);
-
 		snd_soc_update_bits(w->codec, COD3022X_D7_CTRL_CP1,
 			CTRV_CP_NEGREF_MASK, 0x0f);
 
@@ -1806,7 +1782,6 @@ static int epdrv_ev(struct snd_soc_dapm_widget *w,
 					CTMV_CP_MODE_MASK,
 					CTMV_CP_MODE_HALF_VDD << CTMV_CP_MODE_SHIFT);
 
-		msleep(150);
 		snd_soc_update_bits(w->codec, COD3022X_37_MIX_DA2,
 				EN_EP_MIX_DCTL_MASK | EN_EP_MIX_DCTR_MASK, 0x0);
 		cod3022x_usleep(100);
@@ -1829,10 +1804,6 @@ static int epdrv_ev(struct snd_soc_dapm_widget *w,
 		snd_soc_update_bits(w->codec, COD3022X_33_CTRL_EP,
 					CTMV_CP_MODE_MASK,
 					CTMV_CP_MODE_ANALOG << CTMV_CP_MODE_SHIFT);
-
-		snd_soc_update_bits(w->codec, COD3022X_D8_CTRL_CP2,
-				CTMD_CP_H2L_MASK,
-				VIDD_HALF_VDD_DELAY_64MS << CTMD_CP_H2L_SHIFT);
 
 		/* disable_soft_mute */
 		snd_soc_update_bits(w->codec, COD3022X_50_DAC1,

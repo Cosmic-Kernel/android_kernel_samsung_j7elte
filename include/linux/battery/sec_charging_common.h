@@ -490,8 +490,6 @@ struct sec_battery_platform_data {
 	unsigned int swelling_high_rechg_voltage;
 	unsigned int swelling_low_rechg_voltage;
 	unsigned int swelling_block_time;
-	unsigned int swelling_high_temp_topoff;
-	unsigned int swelling_low_temp_topoff;
 
 	/* self discharging */
 	bool self_discharging_en;

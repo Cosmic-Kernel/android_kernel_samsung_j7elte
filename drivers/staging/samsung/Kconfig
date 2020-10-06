@@ -44,6 +44,14 @@ config SEC_DEBUG
 	help
 	  Samsung TN debugging feature.
 
+config SEC_DEBUG_RESET_REASON
+	bool "Enable TN reset reason"
+	depends on SEC_DEBUG
+	default y
+	help
+	  This option enables storing reset reason history file.
+	  This option enables reading the reset reason history using proc/reset_reason file
+
 comment "BSP Feature"
 menuconfig SEC_BSP
 	bool "Samsung TN BSP Feature"

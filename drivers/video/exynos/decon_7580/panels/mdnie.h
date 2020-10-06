@@ -93,6 +93,8 @@ struct mdnie_tune {
 
 	struct mdnie_scr_info	*scr_info;
 	unsigned char **coordinate_table;
+	unsigned char **adjust_ldu_table;
+	unsigned int max_adjust_ldu;
 	int (*color_offset[])(int, int);
 };
 
