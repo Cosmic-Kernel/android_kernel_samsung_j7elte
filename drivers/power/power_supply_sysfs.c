@@ -60,7 +60,7 @@ static ssize_t power_supply_show_property(struct device *dev,
 	};
 	static char *health_text[] = {
 		"Unknown", "Good", "Overheat", "Warm", "Dead", "Over voltage",
-		"Unspecified failure", "Cold", "Cool", "Watchdog timer expire",
+		"Unspecified failure", "Cold", "Cool", "Watchdog timer expire", "Safety timer expire",
 		"Under voltage", "OverheatLimit"
 	};
 	static char *technology_text[] = {
@@ -221,6 +221,7 @@ static struct device_attribute power_supply_attrs[] = {
 	POWER_SUPPLY_ATTR(usb_hc),
 	POWER_SUPPLY_ATTR(model_name),
 	POWER_SUPPLY_ATTR(charge_aicl_control),
+	POWER_SUPPLY_ATTR(set_charge_voltage),
 };
 
 static struct attribute *

@@ -563,9 +563,10 @@
 		status = "okay";
 
 		touchkey@20 {
-			pinctrl-names = "on_irq","off_irq";
+			pinctrl-names = "default","on_irq","off_irq";
 			pinctrl-0 = <&cfg_irq>;
-			pinctrl-1 = <&cfg_input>;
+			pinctrl-1 = <&cfg_irq>;
+			pinctrl-2 = <&cfg_input>;
 			compatible = "coreriver,tc300-keypad";
 			reg = <0x20>;
 			interrupts = <3 0 0>;

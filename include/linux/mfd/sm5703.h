@@ -92,6 +92,7 @@ struct sm5703_fled_platform_data;
 typedef struct sm5703_charger_platform_data {
 	sec_charging_current_t *charging_current_table;
 	int chg_float_voltage;
+	unsigned int top_off_timer;
 	int chg_autostop;
 	int chg_autoset;
 	int chg_aiclen;

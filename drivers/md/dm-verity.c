@@ -561,6 +561,10 @@ static int verity_map(struct dm_target *ti, struct bio *bio)
 
 	if (bio_data_dir(bio) == WRITE)
 		return -EIO;
+#ifdef VERITY_PERF
+
+                goto skip_verity;
+#endif
 		
 #ifdef VERIFY_META_ONLY
 	if (start_meta && !is_metablock(bio->bi_sector >> (v->data_dev_block_bits - SECTOR_SHIFT)))
@@ -585,6 +589,9 @@ static int verity_map(struct dm_target *ti, struct bio *bio)
 	       io->io_vec_size * sizeof(struct bio_vec));
 
 	verity_submit_prefetch(v, io);
+#ifdef VERITY_PERF
+skip_verity:
+#endif
 #ifdef VERIFY_META_ONLY
 skip_verity:
 #endif

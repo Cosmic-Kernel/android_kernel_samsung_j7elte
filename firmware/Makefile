@@ -12,7 +12,7 @@ fw-external-y := $(subst ",,$(CONFIG_EXTRA_FIRMWARE))
 # There are three cases to care about:
 # 1. Building kernel with CONFIG_FIRMWARE_IN_KERNEL=y -- $(fw-shipped-y) should
 #    include the firmware files to include, according to .config
-# 2. 'make modules_install', which will install firmware for modules, and 
+# 2. 'make modules_install', which will install firmware for modules, and
 #    _also_ for the in-kernel drivers when CONFIG_FIRMWARE_IN_KERNEL=n
 # 3. 'make firmware_install', which installs all firmware, unconditionally.
 
@@ -166,13 +166,13 @@ $(warning '$(TSPFIRMWARE_DIRECTORY)' directory dose not exist)
 endif
 
 fw-shipped-$(CONFIG_TOUCHSCREEN_MELFAS_MMS449) += tsp_melfas/mms449_s5neo.fw tsp_melfas/mms449_a8.fw
-fw-shipped-$(CONFIG_TOUCHSCREEN_MELFAS_MMS438) += tsp_melfas/mms438_j7.fw
+fw-shipped-$(CONFIG_TOUCHSCREEN_MELFAS_MMS438) += tsp_melfas/mms438_j7.fw tsp_melfas/mms438_j7x.fw
 fw-shipped-$(CONFIG_TOUCHSCREEN_IST3032C) += tsp_imagis/ist3032c_a3x.fw tsp_imagis/ist3032c_a3x_cmcs.bin \
 						tsp_imagis/ist3032c_a3x_rev0.fw tsp_imagis/ist3032c_a3x_rev0_cmcs.bin
 fw-shipped-$(CONFIG_TOUCHSCREEN_ZINITIX_ZT75XX) += tsp_zinitix/zt7538_a5x.fw
 fw-shipped-$(CONFIG_TOUCHSCREEN_SEC_TS) += tsp_sec/mc44_a7x.bin
 
-fw-shipped-$(CONFIG_KEYBOARD_TC300K) += coreriver/tc350k_s5neo.fw coreriver/tc350k_j7.fw
+fw-shipped-$(CONFIG_KEYBOARD_TC300K) += coreriver/tc350k_s5neo.fw coreriver/tc350k_j7.fw coreriver/tc305k_j7x.fw
 fw-shipped-$(CONFIG_KEYBOARD_ABOV_TOUCH) += abov/abov_tk.fw abov/abov_ft1604_a3.fw \
 						abov/abov_ft1604_a5.fw abov/abov_ft1604_a5_ltn.fw \
 						abov/abov_ft1604_a7.fw abov/abov_ft1604_a7_chn.fw
@@ -260,7 +260,7 @@ $(obj)/%: $(obj)/%.ihex | $(objtree)/$(obj)/$$(dir %)
 # Don't depend on ihex2fw if we're installing and it already exists.
 # Putting it after | in the dependencies doesn't seem sufficient when
 # we're installing after a cross-compile, because ihex2fw has dependencies
-# on stuff like /usr/lib/gcc/ppc64-redhat-linux/4.3.0/include/stddef.h and 
+# on stuff like /usr/lib/gcc/ppc64-redhat-linux/4.3.0/include/stddef.h and
 # thus wants to be rebuilt. Which it can't be, if the prebuilt kernel tree
 # is exported read-only for someone to run 'make install'.
 ifeq ($(INSTALL):$(wildcard $(obj)/ihex2fw),install:$(obj)/ihex2fw)

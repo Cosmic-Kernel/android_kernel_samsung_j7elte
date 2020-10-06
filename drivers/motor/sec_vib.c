@@ -61,10 +61,15 @@ struct sec_vib_drvdata {
 static int sec_vib_reg_en(struct sec_vib_drvdata *ddata,
 	bool en)
 {
-	if (en)
-		return regulator_enable(ddata->regulator);
-	else
-		return regulator_disable(ddata->regulator);
+	if (en) {
+		if (!regulator_is_enabled(ddata->regulator))
+			return regulator_enable(ddata->regulator);
+	}
+	else {
+		if (regulator_is_enabled(ddata->regulator))
+			return regulator_disable(ddata->regulator);
+	}
+	return 0;
 }
 
 static enum hrtimer_restart sec_vib_timer_func(struct hrtimer *timer)
@@ -72,7 +77,6 @@ static enum hrtimer_restart sec_vib_timer_func(struct hrtimer *timer)
 	struct sec_vib_drvdata *ddata =
 		container_of(timer, struct sec_vib_drvdata, timer);
 
-	ddata->timeout = 0;
 	schedule_work(&ddata->work);
 	return HRTIMER_NORESTART;
 }
@@ -95,6 +99,7 @@ static void sec_vib_enable(struct timed_output_dev *dev, int value)
 	struct sec_vib_drvdata *ddata =
 		container_of(dev, struct sec_vib_drvdata, dev);
 	unsigned long	flags;
+	int ret = 0;
 
 	cancel_work_sync(&ddata->work);
 	hrtimer_cancel(&ddata->timer);
@@ -105,7 +110,16 @@ static void sec_vib_enable(struct timed_output_dev *dev, int value)
 		value = ddata->max_timeout;
 
 	ddata->timeout = value;
-	schedule_work(&ddata->work);
+
+	if (value > 0) {
+		ret = sec_vib_reg_en(ddata, true);
+		if (ret)
+			pr_info("reg_en fail(%d)\n", ret);
+		pr_info("on\n");
+#if defined(DEBUG_MOTOR_LOG)
+		ddata->buff.start = local_clock();
+		ddata->running = true;
+#endif
 
 	if (value > 0) {
 		spin_lock_irqsave(&ddata->lock, flags);
@@ -115,6 +129,16 @@ static void sec_vib_enable(struct timed_output_dev *dev, int value)
 			HRTIMER_MODE_REL);
 
 		spin_unlock_irqrestore(&ddata->lock, flags);
+	} else if (value == 0) {
+		ret = sec_vib_reg_en(ddata, false);
+		if (ret)
+			pr_info("reg_en fail(%d)\n", ret);
+		pr_info("off\n");
+#if defined(DEBUG_MOTOR_LOG)
+		if (ddata->running)
+			ddata->buff.stop = local_clock();
+		ddata->running = false;
+#endif
 	}
 }
 
@@ -124,25 +148,17 @@ static void sec_vib_work(struct work_struct *work)
 		container_of(work, struct sec_vib_drvdata, work);
 	int ret = 0;
 
-	if (ddata->timeout > 0) {
-		if (ddata->running)
-			return;
+	ret = sec_vib_reg_en(ddata, false);
+	if (ret)
+		pr_info("reg_en fail(%d)\n", ret);
+	pr_info("off\n");
 
-		ret = sec_vib_reg_en(ddata, true);
 #if defined(DEBUG_MOTOR_LOG)
-		ddata->buff.start = local_clock();
-#endif
-		ddata->running = true;
-	} else {
-		if (!ddata->running)
-			return;
-
-		ret = sec_vib_reg_en(ddata, false);
-#if defined(DEBUG_MOTOR_LOG)
+	if (ddata->running)
 		ddata->buff.stop = local_clock();
+	ddata->running = false;
 #endif
-		ddata->running = false;
-	}
+
 	return;
 }
 
@@ -279,6 +295,31 @@ static int sec_vib_remove(struct platform_device *pdev)
 	return 0;
 }
 
+static int sec_vib_suspend(struct platform_device *pdev, pm_message_t state)
+{
+	struct sec_vib_drvdata *ddata = platform_get_drvdata(pdev);
+	int ret = 0;
+
+	cancel_work_sync(&ddata->work);
+	hrtimer_cancel(&ddata->timer);
+	ret = sec_vib_reg_en(ddata, false);
+	if (ret)
+		pr_info("reg_en fail(%d)\n", ret);
+#if defined(DEBUG_MOTOR_LOG)
+	if (ddata->running)
+		ddata->buff.stop = local_clock();
+	ddata->running = false;
+#endif
+
+	return 0;
+}
+
+
+static int sec_vib_resume(struct platform_device *pdev)
+{
+	return 0;
+}
+
 #if defined(CONFIG_OF)
 static struct of_device_id sec_vib_dt_ids[] = {
 	{ .compatible = "sec_vib" },
@@ -290,6 +331,8 @@ MODULE_DEVICE_TABLE(of, sec_vib_dt_ids);
 static struct platform_driver sec_vib_driver = {
 	.probe		= sec_vib_probe,
 	.remove		= sec_vib_remove,
+	.suspend	= sec_vib_suspend,
+	.resume		= sec_vib_resume,
 	.driver		= {
 		.name		= SEC_VIB_NAME,
 		.owner		= THIS_MODULE,
