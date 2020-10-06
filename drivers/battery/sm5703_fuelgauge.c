@@ -1134,8 +1134,14 @@ static int sm5703_fg_get_property(struct power_supply *psy,
 
 				if (fuelgauge->pdata->capacity_calculation_type &
 						(SEC_FUELGAUGE_CAPACITY_TYPE_SCALE |
-						 SEC_FUELGAUGE_CAPACITY_TYPE_DYNAMIC_SCALE))
-					sm5703_fg_get_scaled_capacity(fuelgauge, val);
+						 SEC_FUELGAUGE_CAPACITY_TYPE_DYNAMIC_SCALE)) {
+							sm5703_fg_get_scaled_capacity(fuelgauge, val);
+
+							if (val->intval > 1010){
+								pr_info("%s : scaled capacity (%d) \n", __func__, val->intval);
+								sm5703_fg_calculate_dynamic_scale(fuelgauge, 100);
+							}
+						}
 
 				/* capacity should be between 0% and 100%
 				 * (0.1% degree)
