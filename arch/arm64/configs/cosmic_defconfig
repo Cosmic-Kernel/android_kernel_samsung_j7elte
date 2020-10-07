@@ -940,6 +940,22 @@ CONFIG_RFKILL_INPUT=y
 # CONFIG_NET_9P is not set
 # CONFIG_CAIF is not set
 # CONFIG_CEPH_LIB is not set
+# CONFIG_NFC is not set
+# CONFIG_NFC_NCI is not set
+# CONFIG_NFC_HCI is not set
+
+#
+# Near Field Communication (NFC) devices
+#
+# CONFIG_NFC_PN533 is not set
+# CONFIG_SEC_NFC is not set
+# CONFIG_NFC_PN547 is not set
+# CONFIG_NFC_PN547_CLK_BBCLK2 is not set
+# CONFIG_NFC_PN547_LDO_CONTROL is not set
+# CONFIG_ESE_P3_LSI is not set
+# CONFIG_ESE_SECURE is not set
+# CONFIG_ESE_SECURE_SPI_PORT is not set
+# CONFIG_ESE_SECURE_GPIO is not set
 
 #
 # Device Drivers
