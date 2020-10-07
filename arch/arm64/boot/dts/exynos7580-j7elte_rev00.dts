@@ -1123,7 +1123,7 @@
 					&audio_codec_cod3022x>;
 		samsung,auxdev = <&s2801x>;
 		samsung,use-externel-jd;
-		samsung,codec-uses-i2scdclk;		
+		samsung,codec-uses-i2scdclk;
 		clocks = <&clock 151>;		 /* sclk_i2s */
 		clock-names = "codec_bclk";
 		mic-bias-mode = <1 2 0>;
@@ -1518,6 +1518,7 @@
 		mif,mif_clk_table = <
 			/* khz */
 			825000
+      741000
 			728000
 			667000
 			559000
