@@ -1,7 +1,7 @@
 VERSION = 3
 PATCHLEVEL = 10
 SUBLEVEL = 107
-EXTRAVERSION = -6c45ae7fa
+EXTRAVERSION =
 NAME = TOSSUG Baby Fish
 
 # *DOCUMENTATION*
@@ -192,9 +192,10 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
 # "make" in the configured kernel build directory always uses that.
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
-export KBUILD_BUILDHOST := $(SUBARCH)
-ARCH		?=arm64
-CROSS_COMPILE	?=/home/themagicalmammal/Documents/GitHub/android_kernel_samsung_j7elte/aarch64-linux-android-4.9/bin/aarch64-linux-android-
+KBUILD_BUILD_USER ?=#cosmic.sh
+KBUILD_BUILDHOST ?=#cosmic.sh
+ARCH		?=#cosmic.sh
+CROSS_COMPILE	?=#cosmic.sh
 
 # Architecture as present in compile.h
 UTS_MACHINE 	:= $(ARCH)
