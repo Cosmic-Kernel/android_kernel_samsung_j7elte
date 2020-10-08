@@ -6,7 +6,9 @@ COSMIC_DEV=themagicalmammal
 #################### Main Dir ###################
 COSMIC_DIR=$(pwd)
 ############## Define toolchan path #############
-COSMIC_TC=~/linaro/bin/aarch64-linux-gnu-
+COSMIC_TOOl=aarch64-linux-android-4.9
+COSMIC_COMPILE_TYPE=linux-android
+COSMIC_TC=~/$COSMIC_TOOl/bin/aarch64-$COSMIC_COMPILE_TYPE-
 ### Define proper arch and dir for dts files ###
 COSMIC_DTS=arch/arm64/boot/dts
 ########### Compiled image location #############
@@ -14,7 +16,7 @@ COSMIC_KERNEL=$COSMIC_DIR/arch/arm64/boot/Image
 ################ Compiled dtb by  ###############
 COSMIC_DTB=$COSMIC_DIR/boot.img-dtb
 ############# Kernel Name & Version #############
-COSMIC_VERSION=v1.5
+COSMIC_VERSION=v1.4
 COSMIC_NAME=Cosmic
 ################## Thread count #################
 COSMIC_JOBS=$((`nproc`-1))
@@ -29,7 +31,7 @@ export ARCH=$COSMIC_ARCH
 export CROSS_COMPILE=$COSMIC_TC
 export PLATFORM_VERSION=$COSMIC_PLATFORM
 ############### Naming the kernel ###############
-export KBUILD_BUILDHOST=$COSMIC_NAME
+export KBUILD_BUILD_HOST=$COSMIC_NAME
 export KBUILD_BUILD_USER=$COSMIC_DEV
 ##### Device specific Variables [SM-J700F] ######
 COSMIC_DTSFILES_J700F="
@@ -63,7 +65,7 @@ BUILD_ZIMAGE()
 	echo "----------------------------------------------"
 	echo " "
 	echo "Building zImage for $COSMIC_VARIANT"
-	export LOCALVERSION=--$COSMIC_VERSION-$COSMIC_VARIANT-$COSMIC_DATE
+	export LOCALVERSION=-$COSMIC_VERSION-$COSMIC_VARIANT-$COSMIC_DATE
 	make  $COSMIC_CONFG
 	make -j$COSMIC_JOBS
 	if [ ! -e ./arch/arm64/boot/Image ]; then

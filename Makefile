@@ -193,7 +193,7 @@ SUBARCH := $(shell uname -m | sed -e s/i.86/x86/ -e s/x86_64/x86/ \
 # Default value for CROSS_COMPILE is not to prefix executables
 # Note: Some architectures assign CROSS_COMPILE in their arch/*/Makefile
 KBUILD_BUILD_USER ?=#cosmic.sh
-KBUILD_BUILDHOST ?=#cosmic.sh
+KBUILD_BUILD_HOST ?=#cosmic.sh
 ARCH		?=#cosmic.sh
 CROSS_COMPILE	?=#cosmic.sh
 
